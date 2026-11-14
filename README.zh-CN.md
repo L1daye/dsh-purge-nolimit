@@ -2,7 +2,7 @@
   <img src="docs/banner.svg" alt="dsh-purge" width="720">
 </p>
 
-<h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge）</h1>
+<h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge-nolimit）</h1>
 
 <p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/L1daye/dsh-purge/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge?logo=github&label=Stars" alt="GitHub stars"></a>
-  <a href="https://github.com/L1daye/dsh-purge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
+  <a href="https://github.com/L1daye/dsh-purge-nolimit/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge-nolimit?logo=github&label=Stars" alt="GitHub stars"></a>
+  <a href="https://github.com/L1daye/dsh-purge-nolimit/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
   <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.2--rc.1-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-  <img src="https://img.shields.io/badge/tests-150%20passing-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-163%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
@@ -179,7 +179,7 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 补丁     74/74 applied（applied=86 skipped=2，optional=2）
 破甲自检 11/11
 红队工具 15/15
-单元测试 150/150
+单元测试 163/163
 提示词   34426 B  MERGED-1.1.71（三份 SHA256 一致）
 预设     redteam 28534 B / unrestricted 16078 B，均 toolFilter=0
 ```
@@ -196,10 +196,10 @@ PATH 里有 `dsh`？一条命令、一次重启、一次点击。跑你正在打
 
 ```sh
 # 官方 `dsh web`
-dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 
 # 官方桌面 EXE
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 1. **完全退出再打开**刚装的那个宿主。Web：停掉 `dsh web` 再开。桌面：托盘也要退出，再开 exe。
@@ -224,14 +224,14 @@ dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/ta
 
 ```sh
 cd "$DSH_HOME/profiles/web"    # 桌面改 profiles/desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 Windows PowerShell：
 
 ```powershell
 cd "$env:USERPROFILE\.dsh\profiles\web"   # 桌面改 profiles\desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 `pnpm add` 和 `dsh plugin add` 都会拉包；`postinstall` 再把 `dsh-purge` 写进 `dsh.profile.bundles`，并在 profile 的 `cordis.patch.yml` 补上本体 `insert`（没有这一行，宿主不加载插件，界面也没有按钮）。
@@ -241,9 +241,9 @@ pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 - pnpm 11/12 默认拦安装脚本（`ERR_PNPM_IGNORED_BUILDS`），要带上允许构建：
 
 ```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 # 已经装上但只有警告时，必须带完整 specifier：
-pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 # bundles / insert 还没写上时再补：
 node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 ```
@@ -263,15 +263,15 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 
 ```sh
 dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 ### 离线安装（本仓库的 tar.gz）
 
-本仓库另提供打包好的 `dsh-purge-2.3.32-dsh022.tar.gz`（2.1 MB）：
+本仓库另提供打包好的 `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`（2.1 MB）：
 
 ```sh
-dsh plugin --profile desktop add file:/绝对路径/dsh-purge-2.3.32-dsh022.tar.gz
+dsh plugin --profile desktop add file:/绝对路径/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
 Windows 手工部署（`@deepseek-ai/*` 是私有包，pnpm 从公网拉不到）见 [AGENTS.md 第 5 节](./AGENTS.md#5-发布流程)。
@@ -326,7 +326,7 @@ lib/                 补丁表、应用引擎、注入、观测、探针
 presets/
   redteam/           红队指挥预设
   unrestricted/      无限制模式（2.3.17+）
-test/                20 个测试文件 / 150 个用例
+test/                20 个测试文件 / 163 个用例
 client.js            侧栏（React，预构建）
 cordis.patch.yml     profile 层的补丁声明
 ```
@@ -477,7 +477,7 @@ node --check lib/core.js
 node --check lib/probe.js
 node --check lib/refusal-retry.js
 
-# 全量测试（150 个用例）
+# 全量测试（163 个用例）
 node --test
 
 # 面板状态（宿主跑着的时候）
@@ -562,7 +562,7 @@ flowchart TD
 
 ## 更新
 
-本仓库的更新与版本说明见 [release-notes.md](./release-notes.md)（2.3.17 起逐版记录）与 [GitHub Releases](https://github.com/L1daye/dsh-purge/releases)。
+本仓库的更新与版本说明见 [release-notes.md](./release-notes.md)（2.3.17 起逐版记录）与 [GitHub Releases](https://github.com/L1daye/dsh-purge-nolimit/releases)。
 
 原作者的频道与仓库：[t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。
 

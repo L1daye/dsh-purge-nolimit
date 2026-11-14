@@ -1,5 +1,13 @@
 # 2.3.32
 
+> **本版起仓库更名为 dsh-purge-nolimit。** 包名仍是 dsh-purge（宿主 profile 的
+> id: dsh-purge insert 依赖它），仓库地址、安装 URL、README 全部指向新名。
+>
+> **2.3.32 同时重写了 lib/armor-scorer.mjs**：不再携带任何 CC BY-NC-SA 内容，
+> 词表按拒绝行为重新组织，来源是本项目自己的实测数据。三重上游署名见 [NOTICE](./NOTICE)。
+
+
+
 ## 中文
 
 - 版本 **2.3.32**。修掉 `probe` 装配侧验证的一个**假阴性**：能把成功的注入报成失败。

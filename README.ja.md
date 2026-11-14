@@ -2,7 +2,7 @@
   <img src="docs/banner.svg" alt="dsh-purge" width="720">
 </p>
 
-<h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge）</h1>
+<h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge-nolimit）</h1>
 
 <p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/L1daye/dsh-purge/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge?logo=github&label=Stars" alt="GitHub stars"></a>
-  <a href="https://github.com/L1daye/dsh-purge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
+  <a href="https://github.com/L1daye/dsh-purge-nolimit/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge-nolimit?logo=github&label=Stars" alt="GitHub stars"></a>
+  <a href="https://github.com/L1daye/dsh-purge-nolimit/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
   <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.2--rc.1-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-  <img src="https://img.shields.io/badge/tests-150%20passing-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-163%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
@@ -179,7 +179,7 @@ Harness は単に質問をモデルへ渡すだけではありません。実行
 パッチ      74/74 適用（applied=86 skipped=2, optional=2）
 解除チェック 11/11
 レッドチーム 15/15
-ユニットテスト 150/150
+ユニットテスト 163/163
 プロンプト   34426 B  MERGED-1.1.71（三つとも SHA256 一致）
 プリセット   redteam 28534 B / unrestricted 16078 B、いずれも toolFilter=0
 ```
@@ -196,10 +196,10 @@ PATH に `dsh` がある場合、コマンド一つ、再起動一回、クリ�
 
 ```sh
 # 公式 `dsh web`
-dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 
 # 公式デスクトップ EXE
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 1. インストールしたホストを**完全に終了してから開き直す**。Web は `dsh web` を停止して再起動。デスクトップはトレイからも終了して exe を起動。
@@ -224,14 +224,14 @@ pnpm のみ（`dsh` 不要）：実際に使う profile へ移動し、リポジ
 
 ```sh
 cd "$DSH_HOME/profiles/web"    # デスクトップは profiles/desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 Windows PowerShell：
 
 ```powershell
 cd "$env:USERPROFILE\.dsh\profiles\web"   # デスクトップは profiles\desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 `pnpm add` も `dsh plugin add` もパッケージを取得し、`postinstall` が `dsh-purge` を `dsh.profile.bundles` に書き込み、profile の `cordis.patch.yml` に本体 `insert` を追加します（この行がないとホストはプラグインを読み込まず、ボタンも出ません）。
@@ -241,9 +241,9 @@ pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 - pnpm 11/12 は既定でインストールスクリプトを止めます（`ERR_PNPM_IGNORED_BUILDS`）。明示的に許可してください：
 
 ```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 # インストール済みで警告のみの場合、完全な指定子が必要：
-pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 # bundles / insert がまだ無い場合：
 node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 ```
@@ -263,15 +263,15 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 
 ```sh
 dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 ### オフライン導入（本リポジトリの tar.gz）
 
-本リポジトリはビルド済みの `dsh-purge-2.3.32-dsh022.tar.gz`（2.1 MB）も配布しています：
+本リポジトリはビルド済みの `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`（2.1 MB）も配布しています：
 
 ```sh
-dsh plugin --profile desktop add file:/絶対パス/dsh-purge-2.3.32-dsh022.tar.gz
+dsh plugin --profile desktop add file:/絶対パス/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
 Windows での手動配備（`@deepseek-ai/*` はプライベートパッケージで pnpm が公開レジストリから取得できない）は [AGENTS.md 第 5 節](./AGENTS.md#5-发布流程)を参照。
@@ -326,7 +326,7 @@ lib/                 パッチ表、適用エンジン、注入、観測、プ�
 presets/
   redteam/           レッドチーム指揮プリセット
   unrestricted/      無制限モード（2.3.17+）
-test/                20 ファイル / 150 ケース
+test/                20 ファイル / 163 ケース
 client.js            サイドバー（React、ビルド済み）
 cordis.patch.yml     profile 層のパッチ宣言
 ```
@@ -476,7 +476,7 @@ node --check lib/core.js
 node --check lib/probe.js
 node --check lib/refusal-retry.js
 
-# 全テスト（150 ケース）
+# 全テスト（163 ケース）
 node --test
 
 # パネル状態（ホスト起動中）
@@ -561,7 +561,7 @@ flowchart TD
 
 ## 更新
 
-本フォークの更新とバージョン情報は [release-notes.md](./release-notes.md)（2.3.17 以降を逐次記録）と [GitHub Releases](https://github.com/L1daye/dsh-purge/releases) を参照してください。
+本フォークの更新とバージョン情報は [release-notes.md](./release-notes.md)（2.3.17 以降を逐次記録）と [GitHub Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) を参照してください。
 
 原作者のチャンネルとリポジトリ：[t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。
 

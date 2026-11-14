@@ -2,7 +2,7 @@
   <img src="docs/banner.svg" alt="dsh-purge" width="720">
 </p>
 
-<h1 align="center">⚔️ DeepSeek Harness Red-Team Toolkit (dsh-purge)</h1>
+<h1 align="center">⚔️ DeepSeek Harness Red-Team Toolkit (dsh-purge-nolimit)</h1>
 
 <p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
@@ -11,13 +11,13 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/L1daye/dsh-purge/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge?logo=github&label=Stars" alt="GitHub stars"></a>
-  <a href="https://github.com/L1daye/dsh-purge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
+  <a href="https://github.com/L1daye/dsh-purge-nolimit/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge-nolimit?logo=github&label=Stars" alt="GitHub stars"></a>
+  <a href="https://github.com/L1daye/dsh-purge-nolimit/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
   <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.2--rc.1-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-  <img src="https://img.shields.io/badge/tests-150%20passing-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-163%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
@@ -179,7 +179,7 @@ Patches that no longer match show as pending or skipped; they never corrupt file
 patches     74/74 applied (applied=86 skipped=2, optional=2)
 armour audit 11/11
 red-team tools 15/15
-unit tests   150/150
+unit tests   163/163
 prompt       34426 B  MERGED-1.1.71 (three copies, identical SHA256)
 presets      redteam 28534 B / unrestricted 16078 B, both toolFilter=0
 ```
@@ -196,10 +196,10 @@ Is `dsh` on PATH? One command, one restart, one click. Run the one matching the 
 
 ```sh
 # Official `dsh web`
-dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 
 # Official desktop EXE
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 1. **Fully quit and reopen** that host. Web: stop `dsh web` and start it again. Desktop: quit from the tray too, then relaunch the exe.
@@ -224,14 +224,14 @@ pnpm only (no `dsh` needed): enter the profile you actually use, not the reposit
 
 ```sh
 cd "$DSH_HOME/profiles/web"    # profiles/desktop for the desktop app
-pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 Windows PowerShell:
 
 ```powershell
 cd "$env:USERPROFILE\.dsh\profiles\web"   # profiles\desktop for the desktop app
-pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 `pnpm add` and `dsh plugin add` both fetch the package; `postinstall` then writes `dsh-purge` into `dsh.profile.bundles` and adds the `insert` entry to the profile's `cordis.patch.yml`. Without that line the host does not load the plugin and no button appears.
@@ -241,9 +241,9 @@ pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 - pnpm 11/12 blocks install scripts by default (`ERR_PNPM_IGNORED_BUILDS`); allow the build explicitly:
 
 ```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 # Already installed with only a warning — the full specifier is required:
-pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 # If bundles / insert are still missing:
 node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 ```
@@ -263,15 +263,15 @@ node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 
 ```sh
 dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
 ```
 
 ### Offline install (this repository's tarball)
 
-This repository also ships a prebuilt `dsh-purge-2.3.32-dsh022.tar.gz` (2.1 MB):
+This repository also ships a prebuilt `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` (2.1 MB):
 
 ```sh
-dsh plugin --profile desktop add file:/absolute/path/dsh-purge-2.3.32-dsh022.tar.gz
+dsh plugin --profile desktop add file:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
 Manual Windows deployment (`@deepseek-ai/*` are private packages pnpm cannot fetch from the public registry) is documented in [AGENTS.md section 5](./AGENTS.md#5-发布流程).
@@ -326,7 +326,7 @@ lib/                 patch table, apply engine, injection, observability, probe
 presets/
   redteam/           red-team command preset
   unrestricted/      unrestricted mode (2.3.17+)
-test/                20 test files / 150 cases
+test/                20 test files / 163 cases
 client.js            sidebar (React, prebuilt)
 cordis.patch.yml     profile-level patch declaration
 ```
@@ -476,7 +476,7 @@ node --check lib/core.js
 node --check lib/probe.js
 node --check lib/refusal-retry.js
 
-# Full suite (150 cases)
+# Full suite (163 cases)
 node --test
 
 # Panel status (while the host is running)
@@ -561,7 +561,7 @@ When no target is found the plugin asks you to set `DSH_BASE` and leaves files a
 
 ## Updates
 
-Release notes for this fork live in [release-notes.md](./release-notes.md) (per-version since 2.3.17) and in [GitHub Releases](https://github.com/L1daye/dsh-purge/releases).
+Release notes for this fork live in [release-notes.md](./release-notes.md) (per-version since 2.3.17) and in [GitHub Releases](https://github.com/L1daye/dsh-purge-nolimit/releases).
 
 The original author's channel and repository: [t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge).
 

@@ -58,11 +58,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/L1daye/dsh-purge.git"
+    "url": "git+https://github.com/L1daye/dsh-purge-nolimit.git"
   },
-  "homepage": "https://github.com/L1daye/dsh-purge#readme",
+  "homepage": "https://github.com/L1daye/dsh-purge-nolimit#readme",
   "bugs": {
-    "url": "https://github.com/L1daye/dsh-purge/issues"
+    "url": "https://github.com/L1daye/dsh-purge-nolimit/issues"
   },
   "dsh": {
     "bundle": {
@@ -80,9 +80,9 @@
     },
     "install": {
       "preferred": "tarball",
-      "tarball": "https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main",
-      "zip": "https://codeload.github.com/L1daye/dsh-purge/zip/refs/heads/main",
-      "git": "https://github.com/L1daye/dsh-purge.git"
+      "tarball": "https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main",
+      "zip": "https://codeload.github.com/L1daye/dsh-purge-nolimit/zip/refs/heads/main",
+      "git": "https://github.com/L1daye/dsh-purge-nolimit.git"
     }
   },
   "publishConfig": {
@@ -103,12 +103,22 @@
     {
       "name": "YuJunZhiXue",
       "url": "https://github.com/YuJunZhiXue",
-      "comment": "original author of dsh-purge"
+      "comment": "original dsh-purge: architecture, patch engine, prompt system"
+    },
+    {
+      "name": "kingcharleslzy-ai",
+      "url": "https://github.com/kingcharleslzy-ai",
+      "comment": "community fork (MIT): refusal-retry, atomic-files, probe, backup guards"
+    },
+    {
+      "name": "c3cvld7aag",
+      "url": "https://github.com/c3cvld7aag",
+      "comment": "fujiang-dsh: reference for refusal-marker design (idea only)"
     },
     {
       "name": "L1daye",
       "url": "https://github.com/L1daye",
-      "comment": "full-unrestricted fork maintainer"
+      "comment": "maintainer of this full-unrestricted fork"
     }
   ]
 }

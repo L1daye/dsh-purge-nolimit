@@ -1,23 +1,45 @@
 dsh-purge
 Copyright 2026 YuJunZhiXue
-
 Source: https://github.com/YuJunZhiXue/dsh-purge
+License: Apache-2.0
 
-This product is licensed under the Apache License, Version 2.0.
+Licensed under the Apache License, Version 2.0.
 Derivative works must retain this NOTICE and attribution.
 
----
-
-Fork: dsh-purge full-unrestricted (2.3.32-dsh022)
+================================================================================
+This distribution: dsh-purge-nolimit (full-unrestricted build)
 Copyright 2026 L1daye
-Source: https://github.com/L1daye/dsh-purge
+Source: https://github.com/L1daye/dsh-purge-nolimit
+================================================================================
 
-Modifications from the original:
+Upstream and referenced projects
+--------------------------------
+1. dsh-purge  —  小杨 / YuJunZhiXue
+   https://github.com/YuJunZhiXue/dsh-purge
+   Apache-2.0
+   Borrowed: overall architecture, patch engine, prompt system, panel, drill platform.
+
+2. dsh-purge-community  —  kingcharleslzy-ai
+   https://github.com/kingcharleslzy-ai/dsh-purge
+   MIT
+   Borrowed: refusal-retry, atomic-files hardening, injection probe design,
+   backup-refresh guards, zero-dependency test ports.
+
+3. fujiang-dsh (fujiang-armor)  —  c3cvld7aag, derived from Minglink/dsh-infinite-gen-4
+   https://github.com/c3cvld7aag/fujiang-dsh
+   CC BY-NC-SA 4.0  (Copyright (c) 2026 Minglink)
+   Referenced: refusal-marker classification as a design reference only.
+   NO code, NO word-list structure and NO ordering from that project is used here.
+   lib/armor-scorer.mjs was rewritten from scratch; its marker list is organised
+   by refusal behaviour and sourced from this project's own test data.
+
+Modifications in this distribution
+----------------------------------
   - Removed all range gates (public / private / domain targets allowed)
   - Removed the game-cheat ban from the default prompt
   - Removed drill-platform authorisation dialogs
   - Added: unrestricted agent preset, refusal retry, injection probe,
     atomic write hardening, observability layer (verify / preflight / trace)
-  - Rewrote the patch table for DSH 0.2.2 and added 150 unit tests
+  - Rewrote the patch table for DSH 0.2.2 and added 150+ unit tests
 
 The original authors' no-resale and attribution requirements are honoured.

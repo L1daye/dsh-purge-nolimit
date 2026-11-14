@@ -12,8 +12,8 @@ import {
   ensurePnpmAllowBuild,
 } from "../lib/profile-insert.js";
 
-const MASTER_URL = "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master";
-const COMMIT_URL = "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/abc1234567890";
+const MASTER_URL = "https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main";
+const COMMIT_URL = "https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/abc1234567890";
 
 function withTempProfile(lockText) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "dsh-purge-test-"));
@@ -139,25 +139,25 @@ test("pnpm-lock.yaml 里的 commit URL 优先于 master", () => {
   assert.deepEqual(specs, ["dsh-purge", `dsh-purge@${COMMIT_URL}`]);
 });
 
-test("lock 读不到（旧 master 记录 / 无文件）退回 package.json tarball", () => {
-  // 无 pnpm-lock.yaml 的临时目录 → 只用裸包名兜底逻辑应落到 package.json 的 master URL
+test("lock 读不到（旧 tarball 记录 / 无文件）退回 package.json tarball", () => {
+  // 无 pnpm-lock.yaml 的临时目录 → 只用裸包名兜底逻辑应落到 package.json 的 tarball URL
   const dir = withTempProfile();
   assert.deepEqual(purgePnpmBuildSpecs(dir), ["dsh-purge", `dsh-purge@${MASTER_URL}`]);
-  // lock 里 specifier 写死 master，也如实保留
+  // lock 里 specifier 写死旧地址，也如实保留
   const dir2 = withTempProfile([
     "importers:",
     "",
     "  .:",
     "    dependencies:",
     "      dsh-purge:",
-    "        specifier: https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master",
+    "        specifier: https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main",
     "        version: '1.1.81'",
     "",
   ].join("\n"));
   assert.deepEqual(purgePnpmBuildSpecs(dir2), ["dsh-purge", `dsh-purge@${MASTER_URL}`]);
 });
 
-test("固定 commit 安装：重写后过期 master 键被换成 commit 键", () => {
+test("固定 commit 安装：重写后过期 tarball 键被换成 commit 键", () => {
   const dir = withTempProfile([
     "lockfileVersion: '9.0'",
     "",
