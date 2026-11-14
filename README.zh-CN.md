@@ -566,6 +566,8 @@ flowchart TD
 
 原作者的频道与仓库：[t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。
 
+**本仓库（fork）的联系方式**：邮件 [lidayet94@gmail.com](mailto:lidayet94@gmail.com) · GitHub [@L1daye](https://github.com/L1daye)。商业授权见 [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md)。
+
 原版不允许倒卖；二开必须署名。
 
 ---

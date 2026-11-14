@@ -565,6 +565,8 @@ flowchart TD
 
 原作者のチャンネルとリポジトリ：[t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。
 
+**本フォークの連絡先**：[lidayet94@gmail.com](mailto:lidayet94@gmail.com) · [@L1daye](https://github.com/L1daye)。商業ライセンス：[LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md)。
+
 原版の転売は禁止、二次開発は帰属表示が必須です。
 
 ---

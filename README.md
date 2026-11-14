@@ -565,6 +565,8 @@ Release notes for this fork live in [release-notes.md](./release-notes.md) (per-
 
 The original author's channel and repository: [t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge).
 
+**This fork's contact**: [lidayet94@gmail.com](mailto:lidayet94@gmail.com) · [@L1daye](https://github.com/L1daye). Commercial licensing: [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md).
+
 The original may not be resold; forks must attribute.
 
 ---
