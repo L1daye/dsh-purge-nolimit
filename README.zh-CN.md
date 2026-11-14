@@ -476,19 +476,60 @@ curl http://127.0.0.1:PORT/dsh-purge/status
 
 ## 工作原理
 
-应用，启动时或手动点「应用」：
+### 四层结构
+
+```mermaid
+flowchart TB
+  subgraph P["① 提示词层（每一轮）"]
+    P1["system-prompt/assemble waterfall"]
+    P2["注入 MERGED-1.1.71 · 34426 B"]
+    P3["probe 段（probe.json 有效时）"]
+  end
+  subgraph E["② 引擎层（应用时）"]
+    E1["88 条字节补丁"]
+    E2["原子写：权限保持 · rename 退避 · 唯一临时名"]
+  end
+  subgraph G["③ 门禁层"]
+    G1["范围 / 外挂 / 审批 → 全部放行"]
+  end
+  subgraph O["④ 观测层"]
+    O1["verify 飞行记录仪"]
+    O2["preflight 锚点预检"]
+    O3["trace 时间线"]
+  end
+  subgraph R["对话期"]
+    R1["refusal-retry：命中拒绝时追加 nudge"]
+    R2["armor-scorer：实时打分 → 破甲徽章"]
+  end
+  P --> E
+  E --> G
+  G --> O
+  G -.-> R
+  O -.->|反馈| P
+```
+
+### 应用流程
+
+启动时或手动点「应用」，都走同一条路：
 
 ```mermaid
 flowchart TD
-  A["启动或点应用"] --> B{"补丁已经生效?"}
+  A["启动 / 点「应用」"] --> B{"补丁已经生效?"}
   B -->|是| C["跳过"]
-  B -->|否| D["备份原件为 .dshpurge.bak"]
-  D --> E["按补丁列表替换对应文件"]
-  E --> F["覆盖 shim"]
-  F --> G["注入插件加密默认（提示词框默认显示的那份）"]
+  B -->|否| D["backupAll<br/>每个目标先建 .dshpurge.bak"]
+  D --> E["refreshStaleBaksForUpgrade<br/>判据：原始锚点是否回来"]
+  E --> F["按 88 条补丁替换<br/>atomicWriteSync：保留权限位 · rename 退避重试"]
+  F --> G["覆盖 shim · 修 CLI 入口"]
+  G --> H["注入加密默认提示词"]
+  H --> I["reapply 每次启动重放<br/>跳过 agent preset，不碰用户配置"]
 ```
 
-每轮的提示词注入与规则集决策：
+**两个容易出错的细节**：
+
+- **`.bak` 的刷新判据是「原始锚点是否回来」**，不是「文件里有没有 `[dsh-purge]` 标记」。整句替换型补丁改写后不带标记，用标记判断会把已打补丁的文件误当成官方新版，进而覆盖掉可用的备份。
+- **`reapply` 每次启动都会重放一遍**，但它**跳过 `$DSH_HOME/.agent-presets/`**——那是我们自己的配置，不是宿主源码，不该参与回退。
+
+### 每轮对话的注入与重试
 
 ```mermaid
 flowchart TD
@@ -500,7 +541,7 @@ flowchart TD
   B -->|是| C["注入 = prompt-inject.md (A)"]
   B -->|否| D{"当前目录有被勾选且非空的本地 md?"}
   D -->|是| E["注入 = 被勾选的 workspace md (B)"]
-  D -->|否| F["注入 = 插件加密 slot 默认值 (D)"]
+  D -->|否| F["注入 = 加密槽默认值 (D)<br/>source: refresh / ensure / sealed / empty"]
   C --> G{"Workspace baseline 策略 (C)"}
   E --> G
   F --> G
@@ -509,13 +550,27 @@ flowchart TD
   G -->|always| J["保留 DSH workspace baseline 段"]
   I -->|是| H
   I -->|否| J
-  H --> K["最终系统提示词"]
+  H --> K["组装最终系统提示词"]
   J --> K
+
+  K --> M["＋ probe 段（probe.json 有效时，order 9000）"]
+  M --> N["模型生成回复"]
+  N --> O{"refusal-retry 检测"}
+  O -->|命中拒绝 · 预算内| Q["agent.followup(nudge)<br/>attempt 1 → 2 → 3"]
+  Q --> N
+  O -->|正常| R["输出"]
+  N --> S["armor-scorer 打分<br/>→ 输入框旁的破甲徽章"]
 
   L -.-> B
   W -.-> D
   P -.-> G
 ```
+
+**三个新增环节**：
+
+- **`probe` 段**只在 `probe.json` 存在且未过期（30 分钟）时注入。想知道「注入到底到没到」用它——`GET /dsh-purge/probe` 直接读会话日志给结论，不看模型配不配合。
+- **`refusal-retry`** 默认关闭。命中拒绝时用 `agent.followup` 追加一句 nudge，最多三段（直接要答案 → 换虚构框架 → 只要最小部件）。同一 seq 不重复、累计上限防死循环。
+- **`armor-scorer`** 只读，不影响对话。它把判定结果写进 `sessionProjections`，界面里的徽章据此标红或标绿。
 
 ---
 

@@ -475,19 +475,60 @@ curl http://127.0.0.1:PORT/dsh-purge/status
 
 ## 動作原理
 
-適用（起動時、または「適用」を押したとき）：
+### 四層構造
+
+```mermaid
+flowchart TB
+  subgraph P["① プロンプト層（毎ラウンド）"]
+    P1["system-prompt/assemble waterfall"]
+    P2["MERGED-1.1.71 を注入 · 34426 B"]
+    P3["probe セクション（probe.json が有効なとき）"]
+  end
+  subgraph E["② エンジン層（適用時）"]
+    E1["88 条のバイトパッチ"]
+    E2["アトミック書き込み：権限保持 · rename バックオフ · 一意な一時名"]
+  end
+  subgraph G["③ ゲート層"]
+    G1["範囲 / チート / 承認 → すべて許可"]
+  end
+  subgraph O["④ 観測層"]
+    O1["verify フライトレコーダー"]
+    O2["preflight アンカー検査"]
+    O3["trace タイムライン"]
+  end
+  subgraph R["会話中"]
+    R1["refusal-retry：拒否を検知したら nudge を追加"]
+    R2["armor-scorer：毎回採点 → 解除バッジ"]
+  end
+  P --> E
+  E --> G
+  G --> O
+  G -.-> R
+  O -.->|フィードバック| P
+```
+
+### 適用
+
+起動時でも「適用」を押したときでも、同じ経路です：
 
 ```mermaid
 flowchart TD
   A["起動 / 適用を押す"] --> B{"パッチは既に有効?"}
   B -->|はい| C["スキップ"]
-  B -->|いいえ| D["元ファイルを .dshpurge.bak に退避"]
-  D --> E["パッチ表に従ってファイルを置換"]
-  E --> F["shim を上書き"]
-  F --> G["プラグインの暗号化既定を注入"]
+  B -->|いいえ| D["backupAll<br/>対象ごとに .dshpurge.bak を作る"]
+  D --> E["refreshStaleBaksForUpgrade<br/>判定：元のアンカーが戻ったか"]
+  E --> F["88 条のパッチで置換<br/>atomicWriteSync：権限保持 · rename リトライ"]
+  F --> G["shim を上書き · CLI エントリを修復"]
+  G --> H["暗号化された既定プロンプトを注入"]
+  H --> I["reapply が起動ごとに再生<br/>agent preset は除外、ユーザー設定は触らない"]
 ```
 
-ラウンドごとのプロンプト注入とルール集の判定：
+**間違えやすい二点**：
+
+- **`.bak` を更新する判定は「元のアンカーが戻ったか」**であり、「`[dsh-purge]` マーカーがあるか」ではありません。文単位の置換パッチはマーカーを残さないため、マーカーで判断するとパッチ済みのファイルをベンダー新版と誤認し、使えるバックアップを上書きしてしまいます。
+- **`reapply` は起動ごとに再生されます**が、**`$DSH_HOME/.agent-presets/` は除外**します。これは本プラグイン自身の設定であり、ホストのソースではないため、ロールバックの対象にしてはいけません。
+
+### ラウンドごとの注入とリトライ
 
 ```mermaid
 flowchart TD
@@ -499,7 +540,7 @@ flowchart TD
   B -->|はい| C["注入 = prompt-inject.md (A)"]
   B -->|いいえ| D{"カレントに選択済みの非空 md がある?"}
   D -->|はい| E["注入 = 選択された workspace md (B)"]
-  D -->|いいえ| F["注入 = プラグインの暗号化スロット既定 (D)"]
+  D -->|いいえ| F["注入 = 暗号化スロット既定 (D)<br/>source: refresh / ensure / sealed / empty"]
   C --> G{"Workspace baseline 方針 (C)"}
   E --> G
   F --> G
@@ -508,13 +549,27 @@ flowchart TD
   G -->|always| J["DSH workspace baseline セクションを残す"]
   I -->|はい| H
   I -->|いいえ| J
-  H --> K["最終システムプロンプト"]
+  H --> K["最終システムプロンプトを組み立てる"]
   J --> K
+
+  K --> M["＋ probe セクション（probe.json が有効なとき、order 9000）"]
+  M --> N["モデルが応答を生成"]
+  N --> O{"refusal-retry の検知"}
+  O -->|拒否 · 予算内| Q["agent.followup(nudge)<br/>attempt 1 → 2 → 3"]
+  Q --> N
+  O -->|正常| R["出力"]
+  N --> S["armor-scorer が採点<br/>→ 入力欄横の解除バッジ"]
 
   L -.-> B
   W -.-> D
   P -.-> G
 ```
+
+**新しく加わった三つの段階**：
+
+- **`probe` セクション**は `probe.json` が存在し有効期限内（30 分）のときだけ注入されます。「注入が実際に届いたか」を知るための仕組みで、`GET /dsh-purge/probe` はモデルの協力に頼らず、セッションログを読んで判定を返します。
+- **`refusal-retry`** は既定でオフ。拒否を検知すると `agent.followup` で nudge を追加し、最大三段（答えを要求 → フィクションの枠に切替 → 最小部品のみ要求）。同一 seq は二度リトライせず、累計上限で無限ループを防ぎます。
+- **`armor-scorer`** は読み取り専用で、会話には影響しません。判定結果を `sessionProjections` に書き込み、画面のバッジがそれに応じて赤／緑になります。
 
 ---
 

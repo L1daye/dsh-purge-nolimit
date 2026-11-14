@@ -475,19 +475,60 @@ curl http://127.0.0.1:PORT/dsh-purge/status
 
 ## How it works
 
-Apply, either on start or by pressing **Apply**:
+### Four layers
+
+```mermaid
+flowchart TB
+  subgraph P["1. Prompt layer (every round)"]
+    P1["system-prompt/assemble waterfall"]
+    P2["injects MERGED-1.1.71 · 34426 B"]
+    P3["probe section (when probe.json is live)"]
+  end
+  subgraph E["2. Engine layer (on apply)"]
+    E1["88 byte patches"]
+    E2["atomic writes: permissions kept · rename backoff · unique temp names"]
+  end
+  subgraph G["3. Gate layer"]
+    G1["range / cheats / approvals → all allowed"]
+  end
+  subgraph O["4. Observability layer"]
+    O1["verify flight recorder"]
+    O2["preflight anchor check"]
+    O3["trace timeline"]
+  end
+  subgraph R["During conversation"]
+    R1["refusal-retry: appends a nudge on a refusal"]
+    R2["armor-scorer: scores every reply → armour badge"]
+  end
+  P --> E
+  E --> G
+  G --> O
+  G -.-> R
+  O -.->|feedback| P
+```
+
+### Apply
+
+On start, or when you press **Apply** — same path:
 
 ```mermaid
 flowchart TD
-  A["Start, or press Apply"] --> B{"Patch already effective?"}
+  A["Start / press Apply"] --> B{"Patch already effective?"}
   B -->|yes| C["Skip"]
-  B -->|no| D["Back up the original as .dshpurge.bak"]
-  D --> E["Replace files per the patch table"]
-  E --> F["Overwrite the shim"]
-  F --> G["Inject the plugin's encrypted default"]
+  B -->|no| D["backupAll<br/>write .dshpurge.bak for every target"]
+  D --> E["refreshStaleBaksForUpgrade<br/>criterion: is the original anchor back?"]
+  E --> F["Replace per the 88 patches<br/>atomicWriteSync: keep mode · retry rename"]
+  F --> G["Overwrite the shim · repair the CLI entry"]
+  G --> H["Inject the encrypted default prompt"]
+  H --> I["reapply replays on every start<br/>skips agent presets, leaves user config alone"]
 ```
 
-Per-round prompt injection and rule-set decision:
+**Two details that are easy to get wrong**:
+
+- **The `.bak` refresh criterion is "is the original anchor back"**, not "does the file still contain `[dsh-purge]`". Whole-sentence replacement patches leave no marker behind, so marker-based judgement mistakes a patched file for a vendor update and overwrites a usable backup.
+- **`reapply` replays on every start**, but it **skips `$DSH_HOME/.agent-presets/`** — that is our own configuration, not host source, and must not take part in rollback.
+
+### Per-round injection and retry
 
 ```mermaid
 flowchart TD
@@ -499,7 +540,7 @@ flowchart TD
   B -->|yes| C["Injection = prompt-inject.md (A)"]
   B -->|no| D{"Ticked, non-empty local md in cwd?"}
   D -->|yes| E["Injection = ticked workspace md (B)"]
-  D -->|no| F["Injection = plugin's encrypted slot default (D)"]
+  D -->|no| F["Injection = encrypted slot default (D)<br/>source: refresh / ensure / sealed / empty"]
   C --> G{"Workspace baseline policy (C)"}
   E --> G
   F --> G
@@ -508,13 +549,27 @@ flowchart TD
   G -->|always| J["Keep the DSH workspace baseline section"]
   I -->|yes| H
   I -->|no| J
-  H --> K["Final system prompt"]
+  H --> K["Assemble the final system prompt"]
   J --> K
+
+  K --> M["+ probe section (when probe.json is live, order 9000)"]
+  M --> N["Model generates a reply"]
+  N --> O{"refusal-retry check"}
+  O -->|refusal, within budget| Q["agent.followup(nudge)<br/>attempt 1 → 2 → 3"]
+  Q --> N
+  O -->|normal| R["Output"]
+  N --> S["armor-scorer scores it<br/>→ armour badge next to the input box"]
 
   L -.-> B
   W -.-> D
   P -.-> G
 ```
+
+**Three new steps**:
+
+- **The `probe` section** is injected only while `probe.json` exists and has not expired (30 minutes). Use it to answer "did the injection actually arrive" — `GET /dsh-purge/probe` reads the session log and returns a verdict without depending on the model cooperating.
+- **`refusal-retry`** is off by default. On a refusal it appends a nudge via `agent.followup`, up to three stages (ask for the answer → switch to a fiction frame → ask for the smallest component). The same seq never retries twice, and a lifetime cap prevents loops.
+- **`armor-scorer`** is read-only and never touches the conversation. It writes its verdict into `sessionProjections`, and the badge turns red or green accordingly.
 
 ---
 
