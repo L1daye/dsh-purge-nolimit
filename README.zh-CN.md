@@ -162,69 +162,53 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 ## 安装
 
-> **先说结论**：DSH 桌面版 **不能**用 `dsh plugin add <url>` 装这个插件。
-> 那会触发 pnpm 重新解析整个依赖树，而 `@deepseek-ai/*` 是私有包，公网 npm 上没有，
-> 必然 `ERR_PNPM_META_FETCH_FAIL`。**这是 DSH 生态的限制，与本插件无关。**
-> 下面的方式一才是可行路径。
+先说一个坑：桌面版的 DSH **不能**用 `dsh plugin add <url>` 装这个插件。
 
-### 方式一：一键安装脚本（推荐）
+那条命令会让 pnpm 把整个依赖树重新解析一遍，而 `@deepseek-ai/*` 是 DSH 自带的私有包，公开 npm 上没有。所以不管网络多好，都会停在 `ERR_PNPM_META_FETCH_FAIL`。这不是本插件的问题，任何 DSH 插件在桌面版上都这样，配代理也没用——那个包根本不在公网上。
+
+能装的方式只有一个：下载 tarball，然后跑安装脚本。
+
+### 装
 
 从 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) 下载
-`dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，然后在 PowerShell 里跑：
+`dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，和脚本放在同一个目录，然后：
 
 ```powershell
-# 如果脚本和 tarball 在同一个目录
 .\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
-脚本会依次完成：备份 → 停宿主 → 校验 SHA512 → 解压 → 改 `package.json`
-→ 改三份 lockfile → 检查 `cordis.patch.yml` → 重启宿主 → 读状态。
+脚本会走完这些步骤：备份现有配置和插件目录，停宿主，算 tarball 的 SHA512，解压到 `node_modules\dsh-purge`，改 profile 的 `package.json`，改写三份 lockfile，检查 `cordis.patch.yml`，最后把宿主拉起来。
 
-```
-[1] 校验 tarball / profile / host
-[2] 备份到 %USERPROFILE%\dsh-purge-install-backup-<时间戳>
-[3] 停宿主
-[4] 计算 SHA512（写进 lockfile 的 integrity）
-[5] 解压到 node_modules/dsh-purge
-[6] 改 package.json（依赖 + bundles）
-[7] 改写三份 lockfile
-[8] 检查 cordis.patch.yml
-[9] 验证关键文件
-[10] 启动宿主
-[11] 读 /dsh-purge/status
-```
+它只动你指定的那个 profile，别的都不碰。每一步之前都会先备份到 `%USERPROFILE%\dsh-purge-install-backup-<时间戳>`，出问题可以整个还原。
 
-**只动目标 profile，其它一律不碰。每一步前都有备份。**
-
-常用参数：
+不放心可以先看一眼会做什么，什么都不改：
 
 ```powershell
-# 先看会发生什么，不改任何东西
 .\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -DryRun
-
-# 装到 web profile
-.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -Profile web
-
-# 装完不自动重启
-.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -NoRestart
 ```
 
-**装完打开宿主，点会话标题旁的 dsh-purge →「清洗」→「应用」**
-（这一步是写宿主补丁，脚本不做，需要你确认）。
+装到 web profile 就把 `-Profile web` 加上。不想让它自动重启就加 `-NoRestart`。
 
-### 方式二：手工安装（脚本跑不了时）
+脚本跑完，打开宿主，点会话标题旁边的 dsh-purge，「清洗」→「应用」。这一步是往宿主源码里写补丁，脚本故意不做，需要你自己确认一次。
 
-只有脚本报错、或你想完全手动操作时才走这条路。
+### 确认装好了
 
-<details>
-<summary><strong>展开手工步骤</strong></summary>
+宿主起来之后，浏览器或 PowerShell 打开状态接口：
 
-**前提**：已从 Releases 下载 `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，
-并知道你的 `$DSH_HOME`（通常是 `%USERPROFILE%\.dsh`）。
+```powershell
+$port = <宿主端口>
+(Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
+```
 
-**1. 停宿主。** 托盘也要退出。
+看到 `plugin=2.3.32-dsh022` 和 `patches=74/74` 就对了。数字不一样的话，点一次「应用」，然后重启。
 
-**2. 解压到插件目录：**
+### 手工装（脚本跑不了的时候）
+
+通常用不上。脚本在 PowerShell 5.1 和 7 上都能跑，除非你的环境很特殊，否则不用往下看。
+
+先停宿主，托盘也要退。
+
+解压到插件目录：
 
 ```powershell
 $home = "$env:USERPROFILE\.dsh"
@@ -234,25 +218,17 @@ New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
 tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
-**3. 改 profile 的 `package.json`**（`$prof\package.json`），追加两处：
+然后改 `$prof\package.json`，加两处。`dependencies` 里加一行：
 
 ```json
-{
-  "dependencies": {
-    "dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
-  },
-  "dsh": {
-    "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-purge"]
-    }
-  }
-}
+"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
 ```
 
-**4. 改三份 lockfile**——这是最麻烦的一步，`integrity` 要重算：
+`dsh.profile.bundles` 数组末尾追加 `"dsh-purge"`。
+
+最后改三份 lockfile：`pnpm-lock.yaml`、`node_modules\.pnpm\lock.yaml`、`node_modules\.modules.yaml`（最后这个是 JSON 格式）。里面要写 tarball 的 SHA512，算法是文件哈希转成 Base64，不是十六进制：
 
 ```powershell
-# 算 tarball 的 SHA512（Base64，不是 hex）
 $sha = [System.Security.Cryptography.SHA512]::Create()
 $fs = [System.IO.File]::OpenRead("C:\绝对路径\pkg.tar.gz")
 $b64 = [Convert]::ToBase64String($sha.ComputeHash($fs))
@@ -260,53 +236,13 @@ $fs.Dispose()
 "sha512-$b64"
 ```
 
-要改的三个文件：`pnpm-lock.yaml`、`node_modules\.pnpm\lock.yaml`、
-`node_modules\.modules.yaml`（最后一个是 JSON）。
+这一步手改很容易漏，留下旧条目会让 pnpm 状态不对。能用脚本就用脚本。
 
-**建议直接用脚本，别手改。** 手改极易留下旧条目，导致 pnpm 状态不一致。
+### 两个包的 SHA256 为什么不一样
 
-</details>
+Releases 里的 tarball 和 GitHub 页面「Download ZIP」拿到的源码包，压缩后哈希不同，但内容是一样的。实测 135 个文件全部逐字节等价，只是换行被 Git 转成了 LF，顶层还多了个目录名。
 
-### 验证安装成功
-
-```powershell
-# 1. 文件在不在
-Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\lib\core.js"
-
-# 2. 宿主认不认（宿主启动后）
-(Invoke-WebRequest http://127.0.0.1:<port>/dsh-purge/status -UseBasicParsing).Content
-# 期望：plugin=2.3.32-dsh022  patches=74/74
-```
-
-**面板计数 `74/74` = 补丁全部就位。** 若显示其它数字，点「应用」再重启一次。
-
-### 为什么不能 `dsh plugin add <github-url>`
-
-```
-ERR_PNPM_META_FETCH_FAIL
-GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-hooks-codex: fetch failed
-```
-
-`dsh plugin add` 会重装整个依赖树，而 `@deepseek-ai/*` 是 DSH 自带的私有包，
-公开 npm 上不存在。即使给 pnpm 配代理也没用——**那个包根本不在公网上**。
-
-**所以任何 DSH 插件在桌面版上都不该走这条路。** 用方式一。
-
-<details>
-<summary><strong>为什么 Release 里的 tarball 与 GitHub 源码包 SHA256 不同</strong></summary>
-
-两者内容**逐字节等价**（已实测 135/135 个文件，规范化换行后哈希全同），
-但压缩产物不同：
-
-|  | GitHub 自动打包 | Release tarball |
-| --- | --- | --- |
-| 顶层目录 | `dsh-purge-nolimit-main/` | 无（平铺） |
-| 换行 | Git 转成 LF | 保持 CRLF |
-| 压缩参数 | GitHub 的 gzip | Windows tar |
-
-**装哪个都行**，脚本会自己算 integrity。Release 里那份更小（1.51 MB vs 1.47 MB）。
-
-</details>
+装哪个都行，脚本会自己算 integrity。
 
 ## 界面预览
 

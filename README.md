@@ -162,70 +162,63 @@ presets      redteam 28534 B / unrestricted 16078 B, both toolFilter=0
 
 ## Install
 
-> **Straight answer first**: the DSH desktop app **cannot** install this plugin with
-> `dsh plugin add <url>`. That triggers a full pnpm dependency-tree resolution, and
-> `@deepseek-ai/*` are private packages that do not exist on the public npm registry,
-> so it always fails with `ERR_PNPM_META_FETCH_FAIL`. **That is a DSH ecosystem
-> limitation, not something this plugin causes.** Route 1 below is the one that works.
+One thing first: the DSH desktop app **cannot** install this plugin with `dsh plugin add <url>`.
 
-### Route 1: the install script (recommended)
+That command makes pnpm re-resolve the whole dependency tree, and `@deepseek-ai/*` are private packages shipped inside DSH that do not exist on public npm. It always stops at `ERR_PNPM_META_FETCH_FAIL`, no matter how good the network is. This is not specific to this plugin - every DSH plugin hits it on the desktop build, and a proxy does not help because the package simply is not on the public registry.
 
-Download `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` from
-[Releases](https://github.com/L1daye/dsh-purge-nolimit/releases), then in PowerShell:
+There is one route that works: download the tarball, then run the install script.
+
+### Installing
+
+Grab `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` from
+[Releases](https://github.com/L1daye/dsh-purge-nolimit/releases), put it next to the
+script, and run:
 
 ```powershell
-# with the script and the tarball in the same directory
 .\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
-The script does the whole sequence: back up, stop the host, verify SHA512, extract,
-patch `package.json`, rewrite all three lockfiles, check `cordis.patch.yml`, restart
-the host, then read the status.
+The script backs up the current config and plugin directory, stops the host, computes
+the tarball's SHA512, extracts into `node_modules\dsh-purge`, patches the profile
+`package.json`, rewrites all three lockfiles, checks `cordis.patch.yml`, and starts the
+host again.
 
-```
-[1]  validate tarball / profile / host
-[2]  back up to %USERPROFILE%\dsh-purge-install-backup-<timestamp>
-[3]  stop the host
-[4]  compute SHA512 (written into the lockfile integrity)
-[5]  extract into node_modules/dsh-purge
-[6]  patch package.json (dependency + bundles)
-[7]  rewrite the three lockfiles
-[8]  check cordis.patch.yml
-[9]  verify key files
-[10] start the host
-[11] read /dsh-purge/status
-```
+It only touches the profile you name. Everything is backed up to
+`%USERPROFILE%\dsh-purge-install-backup-<timestamp>` before each step, so a failed run
+can be rolled back wholesale.
 
-**It only touches the target profile, and every step is preceded by a backup.**
-
-Common flags:
+If you want to see what it would do without changing anything:
 
 ```powershell
-# see what would happen, change nothing
 .\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -DryRun
-
-# install into the web profile
-.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -Profile web
-
-# do not restart automatically
-.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -NoRestart
 ```
 
-**After it finishes, open the host and click dsh-purge next to the session title,
-then Clean, then Apply** - that writes the host patches, which the script leaves to
-you on purpose.
+Add `-Profile web` to install into the web profile, or `-NoRestart` to skip the restart.
 
-### Route 2: manual (only if the script cannot run)
+When it finishes, open the host and click dsh-purge next to the session title, then
+Clean, then Apply. That step writes patches into the host source, which the script
+deliberately leaves to you.
 
-<details>
-<summary><strong>Expand the manual steps</strong></summary>
+### Checking it worked
 
-**Prerequisite**: the tarball from Releases, and your `$DSH_HOME`
-(usually `%USERPROFILE%\.dsh`).
+Once the host is up, query the status endpoint:
 
-**1. Stop the host**, tray included.
+```powershell
+$port = <host port>
+(Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
+```
 
-**2. Extract into the plugin directory:**
+You want `plugin=2.3.32-dsh022` and `patches=74/74`. If the numbers differ, press Apply
+once and restart.
+
+### Manual install (when the script cannot run)
+
+You normally do not need this. The script runs on PowerShell 5.1 and 7 alike, so unless
+your environment is unusual there is no reason to read further.
+
+Stop the host first, tray included.
+
+Extract into the plugin directory:
 
 ```powershell
 $home = "$env:USERPROFILE\.dsh"
@@ -235,26 +228,19 @@ New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
 tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
-**3. Patch the profile `package.json`** (`$prof\package.json`) in two places:
+Then edit `$prof\package.json` in two places. Under `dependencies`, add:
 
 ```json
-{
-  "dependencies": {
-    "dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
-  },
-  "dsh": {
-    "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-purge"]
-    }
-  }
-}
+"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
 ```
 
-**4. Rewrite the three lockfiles.** This is the painful step - `integrity` must be
-recomputed:
+And append `"dsh-purge"` to the `dsh.profile.bundles` array.
+
+Finally the three lockfiles: `pnpm-lock.yaml`, `node_modules\.pnpm\lock.yaml`, and
+`node_modules\.modules.yaml` (the last one is JSON). They need the tarball's SHA512 as
+Base64, not hex:
 
 ```powershell
-# SHA512 of the tarball, Base64 (not hex)
 $sha = [System.Security.Cryptography.SHA512]::Create()
 $fs = [System.IO.File]::OpenRead("C:\absolute\path\pkg.tar.gz")
 $b64 = [Convert]::ToBase64String($sha.ComputeHash($fs))
@@ -262,56 +248,17 @@ $fs.Dispose()
 "sha512-$b64"
 ```
 
-The three files: `pnpm-lock.yaml`, `node_modules\.pnpm\lock.yaml`, and
-`node_modules\.modules.yaml` (the last one is JSON).
+Hand-editing this is easy to get wrong, and stale entries leave pnpm in an inconsistent
+state. Use the script if you can.
 
-**Use the script instead.** Hand-editing easily leaves stale entries and puts pnpm
-into an inconsistent state.
+### Why the two packages have different hashes
 
-</details>
+The tarball in Releases and the source archive behind GitHub's "Download ZIP" button
+compress differently but contain the same files. Measured: all 135 files are
+byte-equivalent, apart from Git normalising line endings to LF and adding a top-level
+directory name.
 
-### Verifying the install
-
-```powershell
-# 1. files present
-Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\lib\core.js"
-
-# 2. host sees it (after the host starts)
-(Invoke-WebRequest http://127.0.0.1:<port>/dsh-purge/status -UseBasicParsing).Content
-# expect: plugin=2.3.32-dsh022  patches=74/74
-```
-
-**A panel count of `74/74` means every patch is in place.** If you see a different
-number, press Apply and restart once.
-
-### Why `dsh plugin add <github-url>` does not work
-
-```
-ERR_PNPM_META_FETCH_FAIL
-GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-hooks-codex: fetch failed
-```
-
-`dsh plugin add` reinstalls the whole dependency tree, and `@deepseek-ai/*` are
-private packages bundled with DSH that do not exist on public npm. A proxy does not
-help - **the package simply is not there.**
-
-**No DSH plugin should be installed that way on the desktop build.** Use Route 1.
-
-<details>
-<summary><strong>Why the Release tarball differs from the GitHub source archive</strong></summary>
-
-The contents are **byte-equivalent** (measured: 135/135 files, identical hashes after
-newline normalisation); only the compressed artifacts differ:
-
-|  | GitHub auto-archive | Release tarball |
-| --- | --- | --- |
-| Top directory | `dsh-purge-nolimit-main/` | none (flat) |
-| Line endings | Git converts to LF | CRLF kept |
-| gzip | GitHub's | Windows tar |
-
-**Either works** - the script computes the integrity itself.
-
-</details>
+Either works. The script computes the integrity itself.
 
 ## Preview
 

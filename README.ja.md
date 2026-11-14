@@ -162,69 +162,70 @@ Harness は単に質問をモデルへ渡すだけではありません。実行
 
 ## インストール
 
-> **先に結論**：DSH デスクトップ版では `dsh plugin add <url>` でこのプラグインを
-> 導入できません。pnpm が依存ツリー全体を再解決し、`@deepseek-ai/*` は公開 npm に
-> 存在しないプライベートパッケージなので、必ず `ERR_PNPM_META_FETCH_FAIL` になります。
-> **これは DSH エコシステム側の制約で、本プラグイン固有の問題ではありません。**
-> 実際に機能するのは下記の方法 1 です。
+先にひとつ注意点があります。DSH のデスクトップ版では、このプラグインを
+`dsh plugin add <url>` で入れることは**できません**。
 
-### 方法 1：インストールスクリプト（推奨）
+このコマンドは pnpm に依存ツリー全体を再解決させますが、`@deepseek-ai/*` は DSH に
+同梱されたプライベートパッケージで、公開 npm には存在しません。ネットワークがどれだけ
+良くても `ERR_PNPM_META_FETCH_FAIL` で止まります。これは本プラグイン固有の問題ではなく、
+DSH のデスクトップ版ではどのプラグインでも同じです。プロキシを設定しても無駄で、
+そもそもパッケージが公網に無いからです。
+
+うまくいく方法はひとつだけです。tarball をダウンロードして、インストールスクリプトを
+実行してください。
+
+### インストール
 
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) から
-`dsh-purge-nolimit-2.3.32-dsh022.tar.gz` をダウンロードし、PowerShell で実行します：
+`dsh-purge-nolimit-2.3.32-dsh022.tar.gz` を取得し、スクリプトと同じディレクトリに
+置いて実行します：
 
 ```powershell
-# スクリプトと tarball が同じディレクトリにある場合
 .\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
-スクリプトは次を順に実行します：バックアップ → ホスト停止 → SHA512 検証 → 展開 →
-`package.json` 修正 → 3 つの lockfile 書き換え → `cordis.patch.yml` 確認 →
-ホスト再起動 → ステータス取得。
+スクリプトは次の順に処理します：既存の設定とプラグインディレクトリをバックアップ、
+ホスト停止、tarball の SHA512 を計算、`node_modules\dsh-purge` に展開、profile の
+`package.json` を修正、3 つの lockfile を書き換え、`cordis.patch.yml` を確認、
+ホストを再起動。
 
-```
-[1]  tarball / profile / host の検証
-[2]  %USERPROFILE%\dsh-purge-install-backup-<timestamp> にバックアップ
-[3]  ホスト停止
-[4]  SHA512 を計算（lockfile の integrity に書き込む）
-[5]  node_modules/dsh-purge に展開
-[6]  package.json 修正（依存と bundles）
-[7]  3 つの lockfile を書き換え
-[8]  cordis.patch.yml を確認
-[9]  主要ファイルを検証
-[10] ホストを起動
-[11] /dsh-purge/status を読む
-```
+指定した profile 以外は一切触りません。各手順の前に
+`%USERPROFILE%\dsh-purge-install-backup-<タイムスタンプ>` へバックアップするので、
+失敗しても丸ごと戻せます。
 
-**対象プロファイルだけを触り、各手順の前に必ずバックアップを取ります。**
-
-よく使うオプション：
+何が起きるかだけ確認したい場合（何も変更しません）：
 
 ```powershell
-# 何が起きるかだけ確認する（何も変更しない）
 .\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -DryRun
-
-# web プロファイルに入れる
-.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -Profile web
-
-# 自動再起動しない
-.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -NoRestart
 ```
 
-**完了後、ホストを開き、セッションタイトル横の dsh-purge →「クリーニング」→「適用」**
-を押してください（ホストパッチの書き込みはスクリプトでは行いません）。
+web profile に入れるなら `-Profile web`、自動再起動を避けるなら `-NoRestart` を
+付けます。
 
-### 方法 2：手動インストール（スクリプトが使えない場合）
+完了したら、ホストを開いてセッションタイトル横の dsh-purge をクリックし、
+「クリーニング」→「適用」を押してください。この手順はホストのソースにパッチを
+書き込むもので、スクリプトでは意図的に行いません。
 
-<details>
-<summary><strong>手動手順を展開</strong></summary>
+### インストールの確認
 
-**前提**：Releases から tarball を取得済みで、`$DSH_HOME`（通常 `%USERPROFILE%\.dsh`）
-を把握していること。
+ホストが起動したら、ステータスエンドポイントを確認します：
 
-**1. ホストを停止**（トレイからも終了）。
+```powershell
+$port = <ホストのポート>
+(Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
+```
 
-**2. プラグインディレクトリに展開：**
+`plugin=2.3.32-dsh022` と `patches=74/74` が出ていれば正常です。数値が違う場合は
+「適用」を一度押して再起動してください。
+
+### 手動インストール（スクリプトが動かない場合）
+
+通常は不要です。スクリプトは PowerShell 5.1 でも 7 でも動作するので、特殊な環境で
+ない限りここを読む必要はありません。
+
+まずホストを停止します。トレイからも終了してください。
+
+プラグインディレクトリに展開します：
 
 ```powershell
 $home = "$env:USERPROFILE\.dsh"
@@ -234,25 +235,19 @@ New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
 tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
-**3. `package.json`（`$prof\package.json`）を 2 か所修正：**
+次に `$prof\package.json` を 2 か所修正します。`dependencies` に追加：
 
 ```json
-{
-  "dependencies": {
-    "dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
-  },
-  "dsh": {
-    "profile": {
-      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-purge"]
-    }
-  }
-}
+"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
 ```
 
-**4. 3 つの lockfile を書き換え**（ここが最も面倒で、`integrity` の再計算が必要）：
+`dsh.profile.bundles` の配列末尾に `"dsh-purge"` を追加します。
+
+最後に 3 つの lockfile、`pnpm-lock.yaml`、`node_modules\.pnpm\lock.yaml`、
+`node_modules\.modules.yaml`（最後は JSON 形式）を書き換えます。tarball の SHA512 を
+Base64 で入れる必要があります（16 進数ではありません）：
 
 ```powershell
-# tarball の SHA512（Base64、hex ではない）
 $sha = [System.Security.Cryptography.SHA512]::Create()
 $fs = [System.IO.File]::OpenRead("C:\absolute\path\pkg.tar.gz")
 $b64 = [Convert]::ToBase64String($sha.ComputeHash($fs))
@@ -260,57 +255,17 @@ $fs.Dispose()
 "sha512-$b64"
 ```
 
-対象は `pnpm-lock.yaml`、`node_modules\.pnpm\lock.yaml`、
-`node_modules\.modules.yaml`（最後は JSON）。
+手作業での修正は漏れやすく、古いエントリが残ると pnpm の状態が不整合になります。
+可能ならスクリプトを使ってください。
 
-**手修正は避け、スクリプトを使ってください。** 古いエントリが残り、pnpm の状態が
-不整合になります。
+### 2 つのパッケージでハッシュが違う理由
 
-</details>
+Releases の tarball と、GitHub の「Download ZIP」で得られるソースアーカイブは、
+圧縮結果が異なるだけで内容は同じです。実測では 135 ファイルすべてがバイト単位で
+等価で、違いは Git が改行を LF に変換することと、先頭にディレクトリ名が付くことだけ
+です。
 
-### インストールの確認
-
-```powershell
-# 1. ファイルの存在
-Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\lib\core.js"
-
-# 2. ホストが認識しているか（起動後）
-(Invoke-WebRequest http://127.0.0.1:<port>/dsh-purge/status -UseBasicParsing).Content
-# 期待値: plugin=2.3.32-dsh022  patches=74/74
-```
-
-**パネルの `74/74` は全パッチが適用済みという意味です。** 違う数値なら「適用」を
-押して一度再起動してください。
-
-### `dsh plugin add <github-url>` が使えない理由
-
-```
-ERR_PNPM_META_FETCH_FAIL
-GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-hooks-codex: fetch failed
-```
-
-`dsh plugin add` は依存ツリー全体を再インストールし、`@deepseek-ai/*` は DSH 同梱の
-プライベートパッケージで公開 npm には存在しません。プロキシを設定しても無駄です
-——**そもそもパッケージが公網に無い**からです。
-
-**DSH のデスクトップ版では、どの DSH プラグインもこの方法で入れるべきではありません。**
-方法 1 を使ってください。
-
-<details>
-<summary><strong>Release の tarball と GitHub ソースアーカイブで SHA256 が違う理由</strong></summary>
-
-内容は**バイト単位で等価**です（実測 135/135 ファイル、改行正規化後のハッシュが一致）。
-異なるのは圧縮成果物だけです：
-
-|  | GitHub 自動アーカイブ | Release tarball |
-| --- | --- | --- |
-| 先頭ディレクトリ | `dsh-purge-nolimit-main/` | なし（フラット） |
-| 改行 | Git が LF に変換 | CRLF のまま |
-| gzip | GitHub のもの | Windows tar |
-
-**どちらでも動作します**（スクリプトが integrity を計算します）。
-
-</details>
+どちらでも動作します。integrity はスクリプトが計算します。
 
 ## プレビュー
 
