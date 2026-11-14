@@ -168,8 +168,6 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 能装的方式只有一个：下载 tarball，然后跑安装脚本。
 
-### 装
-
 从 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) 下载
 `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，和脚本放在同一个目录，然后：
 

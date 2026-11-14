@@ -174,8 +174,6 @@ DSH のデスクトップ版ではどのプラグインでも同じです。プ�
 うまくいく方法はひとつだけです。tarball をダウンロードして、インストールスクリプトを
 実行してください。
 
-### インストール
-
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) から
 `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` を取得し、スクリプトと同じディレクトリに
 置いて実行します：

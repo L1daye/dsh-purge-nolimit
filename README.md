@@ -168,8 +168,6 @@ That command makes pnpm re-resolve the whole dependency tree, and `@deepseek-ai/
 
 There is one route that works: download the tarball, then run the install script.
 
-### Installing
-
 Grab `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` from
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases), put it next to the
 script, and run:
