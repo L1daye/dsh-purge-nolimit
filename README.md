@@ -256,27 +256,41 @@ Manual Windows deployment (`@deepseek-ai/*` are private packages pnpm cannot fet
 
 **dsh-purge** sits next to the session title. Clicking it opens the right panel with two pages: **Clean** and **Drill**. Light / dark switchable. Patches expand in groups; progress counts only what is really applied.
 
-**Clean**
+**Clean · patch overview**
 
-![Clean](docs/preview/dock-clean.png)
+All 88 patches grouped with live status; version and progress at the top, the eight apply stages below.
 
-**Drill**
+![Clean · patch overview](docs/preview/dock-clean.png)
 
-![Drill](docs/preview/dock-drill.png)
+**Patch detail**
 
-**Patches**
+Per-patch status. Shown here: all 22 prompt-layer patches applied.
 
-![Patches](docs/preview/settings.png)
+![Patch detail](docs/preview/settings.png)
 
 **Rule sets**
 
-![Rules](docs/preview/rules.png)
+Workspace policy plus enabling and editing local `AGENTS.md` / `CLAUDE.md`.
+
+![Rule sets](docs/preview/rules.png)
+
+**Drill · environment**
+
+Toolchain paths, egress status, platform mode.
+
+![Drill · environment](docs/preview/dock-drill.png)
+
+**Drill · asset mapping**
+
+Scan results sorted by ease of exploitation, filterable by port, fingerprint and scope.
+
+![Drill · asset mapping](docs/preview/dock-assets.png)
 
 | Area | Purpose |
 | --- | --- |
 | dsh-purge | Button next to the session title; opens or collapses the right panel |
 | Clean | Patches, prompt, rule sets |
-| Drill | Asset and environment view (auto-authorised in this build, no countdown) |
+| Drill | Environment and asset-mapping pages (auto-authorised, no countdown) |
 | Patches | Grouped status; apply, revert or uninstall |
 | Prompt | Edit `prompt-inject.md`, used as the session override section |
 | Rule sets | Multiple `AGENTS.md` / `CLAUDE.md`; enabling writes to `$DSH_HOME`, deleting removes from the list |

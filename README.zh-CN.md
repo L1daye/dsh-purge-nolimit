@@ -256,27 +256,41 @@ Windows 手工部署（`@deepseek-ai/*` 是私有包，pnpm 从公网拉不到�
 
 会话标题旁有 **dsh-purge**。点开是右侧栏，两页：**清洗** 和 **演练台**。白 / 墨可切换。补丁按组展开，进度只计真正已应用的项。
 
-**清洗**
+**清洗 · 补丁总览**
 
-![清洗](docs/preview/dock-clean.png)
+分组显示 88 条补丁的实时状态，顶部是版本与进度，下面是应用流程的八个阶段。
 
-**演练台**
+![清洗 · 补丁总览](docs/preview/dock-clean.png)
 
-![演练台](docs/preview/dock-drill.png)
+**补丁详情**
 
-**补丁**
+展开后的逐条状态。下图是提示词层 22 条全部「已应用」。
 
-![补丁](docs/preview/settings.png)
+![补丁详情](docs/preview/settings.png)
 
 **规则集**
 
+工作区策略 + 本地 `AGENTS.md` / `CLAUDE.md` 的启用与编辑。
+
 ![规则集](docs/preview/rules.png)
+
+**演练台 · 环境适配**
+
+工具链路径、出网状态、平台模式。
+
+![演练台 · 环境适配](docs/preview/dock-drill.png)
+
+**演练台 · 资产测绘**
+
+扫描结果按易打性排序，可筛选端口、指纹、内外网。
+
+![演练台 · 资产测绘](docs/preview/dock-assets.png)
 
 | 区域 | 说明 |
 | --- | --- |
 | dsh-purge | 会话标题旁的按钮，打开或收起右侧栏 |
 | 清洗 | 补丁、提示词、规则集 |
-| 演练台 | 资产与环境页（本版自动授权，无倒计时） |
+| 演练台 | 环境适配 + 资产测绘两页（本版自动授权，无倒计时） |
 | 补丁 | 分组查看状态，应用、还原或卸载 |
 | 提示词 | 编辑 `prompt-inject.md`，作为会话覆盖段 |
 | 规则集 | 多套 `AGENTS.md` / `CLAUDE.md`；启用写入 `$DSH_HOME`，删除从列表去掉 |
