@@ -162,95 +162,155 @@ Harness は単に質問をモデルへ渡すだけではありません。実行
 
 ## インストール
 
-**プラグインマーケットは使わないでください**：ワンクリック導入は `already queued: dsh-purge` で失敗します。npm に `dsh-purge` という名前はなく、`pnpm add dsh-purge` も通じません。
+> **先に結論**：DSH デスクトップ版では `dsh plugin add <url>` でこのプラグインを
+> 導入できません。pnpm が依存ツリー全体を再解決し、`@deepseek-ai/*` は公開 npm に
+> 存在しないプライベートパッケージなので、必ず `ERR_PNPM_META_FETCH_FAIL` になります。
+> **これは DSH エコシステム側の制約で、本プラグイン固有の問題ではありません。**
+> 実際に機能するのは下記の方法 1 です。
 
-### クイックインストール
+### 方法 1：インストールスクリプト（推奨）
 
-PATH に `dsh` がある場合、コマンド一つ、再起動一回、クリック一回です。開いているホストに合わせて実行してください（デスクトップ版は `web` を `desktop` に）：
-
-```sh
-# 公式 `dsh web`
-dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-
-# 公式デスクトップ EXE
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-```
-
-1. インストールしたホストを**完全に終了してから開き直す**。Web は `dsh web` を停止して再起動。デスクトップはトレイからも終了して exe を起動。
-2. そのホストでセッションタイトル横の **dsh-purge** →「クリーニング」→「適用」。成功すると一度だけ自動再起動します。
-
-完了 —— チャットで `/purge status` を実行して確認します。
-
-### 手順の詳細
-
-**手順 1 —— ホストを選ぶ。** 公式 `dsh web` と公式デスクトップ EXE は**別々にインストールし、別々に適用**します。
-
-| 使用中 | profile |
-| --- | --- |
-| 公式 `dsh web` | `web` |
-| 公式デスクトップ EXE | `desktop` |
-
-**手順 2 —— プラグインを導入。** アーカイブ URL は `codeload.github.com` の形式のみ使ってください。`github.com/.../archive` は 302 リダイレクトで pnpm が `fetch failed` を出します。
-
-`dsh` がある場合：クイックインストールの該当コマンドを実行。カレントディレクトリが本リポジトリなら URL を `.` に置き換えます。
-
-pnpm のみ（`dsh` 不要）：実際に使う profile へ移動し、リポジトリのルートでは実行しないでください。
-
-```sh
-cd "$DSH_HOME/profiles/web"    # デスクトップは profiles/desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-```
-
-Windows PowerShell：
+[Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) から
+`dsh-purge-nolimit-2.3.32-dsh022.tar.gz` をダウンロードし、PowerShell で実行します：
 
 ```powershell
-cd "$env:USERPROFILE\.dsh\profiles\web"   # デスクトップは profiles\desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
+# スクリプトと tarball が同じディレクトリにある場合
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
-`pnpm add` も `dsh plugin add` もパッケージを取得し、`postinstall` が `dsh-purge` を `dsh.profile.bundles` に書き込み、profile の `cordis.patch.yml` に本体 `insert` を追加します（この行がないとホストはプラグインを読み込まず、ボタンも出ません）。
+スクリプトは次を順に実行します：バックアップ → ホスト停止 → SHA512 検証 → 展開 →
+`package.json` 修正 → 3 つの lockfile 書き換え → `cordis.patch.yml` 確認 →
+ホスト再起動 → ステータス取得。
 
-**完了の目印：** `node_modules/dsh-purge/package.json` が存在し、`bundles` に `"dsh-purge"` があり、`cordis.patch.yml` に `id: dsh-purge` の insert がある。
-
-- pnpm 11/12 は既定でインストールスクリプトを止めます（`ERR_PNPM_IGNORED_BUILDS`）。明示的に許可してください：
-
-```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-# インストール済みで警告のみの場合、完全な指定子が必要：
-pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-# bundles / insert がまだ無い場合：
-node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
+```
+[1]  tarball / profile / host の検証
+[2]  %USERPROFILE%\dsh-purge-install-backup-<timestamp> にバックアップ
+[3]  ホスト停止
+[4]  SHA512 を計算（lockfile の integrity に書き込む）
+[5]  node_modules/dsh-purge に展開
+[6]  package.json 修正（依存と bundles）
+[7]  3 つの lockfile を書き換え
+[8]  cordis.patch.yml を確認
+[9]  主要ファイルを検証
+[10] ホストを起動
+[11] /dsh-purge/status を読む
 ```
 
-**手順 3 —— ホストを再起動。** profile に書き込んだだけでは `@deepseek-ai` は**まだ変更されません**。
+**対象プロファイルだけを触り、各手順の前に必ずバックアップを取ります。**
 
-**完了の目印：** セッションタイトル横に **dsh-purge** が現れる。
+よく使うオプション：
 
-**手順 4 —— 適用と検証。** **そのホスト**でセッションタイトル横の **dsh-purge** →「クリーニング」→「適用」。成功すると一度だけ自動再起動します。
+```powershell
+# 何が起きるかだけ確認する（何も変更しない）
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -DryRun
 
-**完了の目印：** チャットで `/purge status` が `DSH_HOME` とパッチ一覧を、実際に使っているインストールのパスで出力する。
+# web プロファイルに入れる
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -Profile web
 
-**手順 5 —— トラブルシューティング。**
-
-- **セッションタイトル横にボタンが出ない。** その profile で `dsh --dump-config` を実行し、`id: dsh-purge` の本体行があるか確認。無ければ手順 2 の `ensure-profile-bundle.mjs` を再実行し、ホストを完全に終了して開き直す。
-- **マーケットが `already queued: dsh-purge` を出す。** マーケットは使わず、`dsh plugin add` か pnpm で導入。CLI も既にあると言う場合は、削除してから入れ直す：
-
-```sh
-dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
+# 自動再起動しない
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -NoRestart
 ```
 
-### オフライン導入（本リポジトリの tar.gz）
+**完了後、ホストを開き、セッションタイトル横の dsh-purge →「クリーニング」→「適用」**
+を押してください（ホストパッチの書き込みはスクリプトでは行いません）。
 
-本リポジトリはビルド済みの `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`（2.1 MB）も配布しています：
+### 方法 2：手動インストール（スクリプトが使えない場合）
 
-```sh
-dsh plugin --profile desktop add file:/絶対パス/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+<details>
+<summary><strong>手動手順を展開</strong></summary>
+
+**前提**：Releases から tarball を取得済みで、`$DSH_HOME`（通常 `%USERPROFILE%\.dsh`）
+を把握していること。
+
+**1. ホストを停止**（トレイからも終了）。
+
+**2. プラグインディレクトリに展開：**
+
+```powershell
+$home = "$env:USERPROFILE\.dsh"
+$prof = "$home\profiles\desktop"
+Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
+tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
-Windows での手動配備（`@deepseek-ai/*` はプライベートパッケージで pnpm が公開レジストリから取得できない）は [AGENTS.md 第 5 節](./AGENTS.md#5-发布流程)を参照。
+**3. `package.json`（`$prof\package.json`）を 2 か所修正：**
 
----
+```json
+{
+  "dependencies": {
+    "dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-purge"]
+    }
+  }
+}
+```
+
+**4. 3 つの lockfile を書き換え**（ここが最も面倒で、`integrity` の再計算が必要）：
+
+```powershell
+# tarball の SHA512（Base64、hex ではない）
+$sha = [System.Security.Cryptography.SHA512]::Create()
+$fs = [System.IO.File]::OpenRead("C:\absolute\path\pkg.tar.gz")
+$b64 = [Convert]::ToBase64String($sha.ComputeHash($fs))
+$fs.Dispose()
+"sha512-$b64"
+```
+
+対象は `pnpm-lock.yaml`、`node_modules\.pnpm\lock.yaml`、
+`node_modules\.modules.yaml`（最後は JSON）。
+
+**手修正は避け、スクリプトを使ってください。** 古いエントリが残り、pnpm の状態が
+不整合になります。
+
+</details>
+
+### インストールの確認
+
+```powershell
+# 1. ファイルの存在
+Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\lib\core.js"
+
+# 2. ホストが認識しているか（起動後）
+(Invoke-WebRequest http://127.0.0.1:<port>/dsh-purge/status -UseBasicParsing).Content
+# 期待値: plugin=2.3.32-dsh022  patches=74/74
+```
+
+**パネルの `74/74` は全パッチが適用済みという意味です。** 違う数値なら「適用」を
+押して一度再起動してください。
+
+### `dsh plugin add <github-url>` が使えない理由
+
+```
+ERR_PNPM_META_FETCH_FAIL
+GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-hooks-codex: fetch failed
+```
+
+`dsh plugin add` は依存ツリー全体を再インストールし、`@deepseek-ai/*` は DSH 同梱の
+プライベートパッケージで公開 npm には存在しません。プロキシを設定しても無駄です
+——**そもそもパッケージが公網に無い**からです。
+
+**DSH のデスクトップ版では、どの DSH プラグインもこの方法で入れるべきではありません。**
+方法 1 を使ってください。
+
+<details>
+<summary><strong>Release の tarball と GitHub ソースアーカイブで SHA256 が違う理由</strong></summary>
+
+内容は**バイト単位で等価**です（実測 135/135 ファイル、改行正規化後のハッシュが一致）。
+異なるのは圧縮成果物だけです：
+
+|  | GitHub 自動アーカイブ | Release tarball |
+| --- | --- | --- |
+| 先頭ディレクトリ | `dsh-purge-nolimit-main/` | なし（フラット） |
+| 改行 | Git が LF に変換 | CRLF のまま |
+| gzip | GitHub のもの | Windows tar |
+
+**どちらでも動作します**（スクリプトが integrity を計算します）。
+
+</details>
 
 ## プレビュー
 

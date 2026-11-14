@@ -162,95 +162,151 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 ## 安装
 
-**不要走插件市场**：一键安装会报 `already queued: dsh-purge`。npm 仓库没有 `dsh-purge` 这个名字，不要 `pnpm add dsh-purge`。
+> **先说结论**：DSH 桌面版 **不能**用 `dsh plugin add <url>` 装这个插件。
+> 那会触发 pnpm 重新解析整个依赖树，而 `@deepseek-ai/*` 是私有包，公网 npm 上没有，
+> 必然 `ERR_PNPM_META_FETCH_FAIL`。**这是 DSH 生态的限制，与本插件无关。**
+> 下面的方式一才是可行路径。
 
-### 快速安装
+### 方式一：一键安装脚本（推荐）
 
-PATH 里有 `dsh`？一条命令、一次重启、一次点击。跑你正在打开那一端的命令（桌面版把 `web` 换成 `desktop`）：
-
-```sh
-# 官方 `dsh web`
-dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-
-# 官方桌面 EXE
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-```
-
-1. **完全退出再打开**刚装的那个宿主。Web：停掉 `dsh web` 再开。桌面：托盘也要退出，再开 exe。
-2. 在这个宿主点会话标题旁的 **dsh-purge** →「清洗」→「应用」。应用成功后会自动重启一次。
-
-完成 —— 聊天里跑 `/purge status` 验证。
-
-### 分步说明
-
-**第 1 步 —— 选定宿主。** 官方 `dsh web` 和官方桌面 EXE **分开装、分开应用**。
-
-| 你正在用 | profile |
-| --- | --- |
-| 官方 `dsh web` | `web` |
-| 官方桌面 EXE | `desktop` |
-
-**第 2 步 —— 装插件。** 压缩包地址只用 `codeload.github.com` 这个写法，不要用 `github.com/.../archive`：后者 302，pnpm 会 `fetch failed`。
-
-有 `dsh`：跑快速安装里你那一端的命令。当前目录已是本仓库时，把网址换成 `.`。
-
-只有 pnpm（没有 `dsh` 也行）：进正在用的那个 profile，不要在仓库根执行。
-
-```sh
-cd "$DSH_HOME/profiles/web"    # 桌面改 profiles/desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-```
-
-Windows PowerShell：
+从 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) 下载
+`dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，然后在 PowerShell 里跑：
 
 ```powershell
-cd "$env:USERPROFILE\.dsh\profiles\web"   # 桌面改 profiles\desktop
-pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
+# 如果脚本和 tarball 在同一个目录
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
-`pnpm add` 和 `dsh plugin add` 都会拉包；`postinstall` 再把 `dsh-purge` 写进 `dsh.profile.bundles`，并在 profile 的 `cordis.patch.yml` 补上本体 `insert`（没有这一行，宿主不加载插件，界面也没有按钮）。
+脚本会依次完成：备份 → 停宿主 → 校验 SHA512 → 解压 → 改 `package.json`
+→ 改三份 lockfile → 检查 `cordis.patch.yml` → 重启宿主 → 读状态。
 
-**完成标志：** `node_modules/dsh-purge/package.json` 在，该 profile 的 `bundles` 里有 `"dsh-purge"`，`cordis.patch.yml` 里有 `id: dsh-purge` 的 insert。
-
-- pnpm 11/12 默认拦安装脚本（`ERR_PNPM_IGNORED_BUILDS`），要带上允许构建：
-
-```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-# 已经装上但只有警告时，必须带完整 specifier：
-pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-# bundles / insert 还没写上时再补：
-node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
+```
+[1] 校验 tarball / profile / host
+[2] 备份到 %USERPROFILE%\dsh-purge-install-backup-<时间戳>
+[3] 停宿主
+[4] 计算 SHA512（写进 lockfile 的 integrity）
+[5] 解压到 node_modules/dsh-purge
+[6] 改 package.json（依赖 + bundles）
+[7] 改写三份 lockfile
+[8] 检查 cordis.patch.yml
+[9] 验证关键文件
+[10] 启动宿主
+[11] 读 /dsh-purge/status
 ```
 
-**第 3 步 —— 重启宿主。** 只把插件写进 profile **还不会**改 `@deepseek-ai`。
+**只动目标 profile，其它一律不碰。每一步前都有备份。**
 
-**完成标志：** 会话标题旁出现 **dsh-purge**。
+常用参数：
 
-**第 4 步 —— 应用并验证。** 在**这个宿主**点会话标题旁的 **dsh-purge**，打开「清洗」，点「应用」。应用成功后会自动重启一次。
+```powershell
+# 先看会发生什么，不改任何东西
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -DryRun
 
-**完成标志：** 聊天里 `/purge status` 能打出 `DSH_HOME` 和补丁列表，路径是你正在用的那一份。
+# 装到 web profile
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -Profile web
 
-**第 5 步 —— 排障。**
-
-- **会话标题旁没有按钮。** 在对应 profile 跑 `dsh --dump-config`，看有没有本体行 `id: dsh-purge`。没有就再跑第 2 步的 `ensure-profile-bundle.mjs`，然后完全退出重开宿主。
-- **市场报 `already queued: dsh-purge`。** 不要再点市场；用 `dsh plugin add` 或 pnpm 装。命令也说已经有了，就先卸再装：
-
-```sh
-dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
+# 装完不自动重启
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -NoRestart
 ```
 
-### 离线安装（本仓库的 tar.gz）
+**装完打开宿主，点会话标题旁的 dsh-purge →「清洗」→「应用」**
+（这一步是写宿主补丁，脚本不做，需要你确认）。
 
-本仓库另提供打包好的 `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`（2.1 MB）：
+### 方式二：手工安装（脚本跑不了时）
 
-```sh
-dsh plugin --profile desktop add file:/绝对路径/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+只有脚本报错、或你想完全手动操作时才走这条路。
+
+<details>
+<summary><strong>展开手工步骤</strong></summary>
+
+**前提**：已从 Releases 下载 `dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，
+并知道你的 `$DSH_HOME`（通常是 `%USERPROFILE%\.dsh`）。
+
+**1. 停宿主。** 托盘也要退出。
+
+**2. 解压到插件目录：**
+
+```powershell
+$home = "$env:USERPROFILE\.dsh"
+$prof = "$home\profiles\desktop"
+Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
+tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
-Windows 手工部署（`@deepseek-ai/*` 是私有包，pnpm 从公网拉不到）见 [AGENTS.md 第 5 节](./AGENTS.md#5-发布流程)。
+**3. 改 profile 的 `package.json`**（`$prof\package.json`），追加两处：
 
----
+```json
+{
+  "dependencies": {
+    "dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-purge"]
+    }
+  }
+}
+```
+
+**4. 改三份 lockfile**——这是最麻烦的一步，`integrity` 要重算：
+
+```powershell
+# 算 tarball 的 SHA512（Base64，不是 hex）
+$sha = [System.Security.Cryptography.SHA512]::Create()
+$fs = [System.IO.File]::OpenRead("C:\绝对路径\pkg.tar.gz")
+$b64 = [Convert]::ToBase64String($sha.ComputeHash($fs))
+$fs.Dispose()
+"sha512-$b64"
+```
+
+要改的三个文件：`pnpm-lock.yaml`、`node_modules\.pnpm\lock.yaml`、
+`node_modules\.modules.yaml`（最后一个是 JSON）。
+
+**建议直接用脚本，别手改。** 手改极易留下旧条目，导致 pnpm 状态不一致。
+
+</details>
+
+### 验证安装成功
+
+```powershell
+# 1. 文件在不在
+Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\lib\core.js"
+
+# 2. 宿主认不认（宿主启动后）
+(Invoke-WebRequest http://127.0.0.1:<port>/dsh-purge/status -UseBasicParsing).Content
+# 期望：plugin=2.3.32-dsh022  patches=74/74
+```
+
+**面板计数 `74/74` = 补丁全部就位。** 若显示其它数字，点「应用」再重启一次。
+
+### 为什么不能 `dsh plugin add <github-url>`
+
+```
+ERR_PNPM_META_FETCH_FAIL
+GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-hooks-codex: fetch failed
+```
+
+`dsh plugin add` 会重装整个依赖树，而 `@deepseek-ai/*` 是 DSH 自带的私有包，
+公开 npm 上不存在。即使给 pnpm 配代理也没用——**那个包根本不在公网上**。
+
+**所以任何 DSH 插件在桌面版上都不该走这条路。** 用方式一。
+
+<details>
+<summary><strong>为什么 Release 里的 tarball 与 GitHub 源码包 SHA256 不同</strong></summary>
+
+两者内容**逐字节等价**（已实测 135/135 个文件，规范化换行后哈希全同），
+但压缩产物不同：
+
+|  | GitHub 自动打包 | Release tarball |
+| --- | --- | --- |
+| 顶层目录 | `dsh-purge-nolimit-main/` | 无（平铺） |
+| 换行 | Git 转成 LF | 保持 CRLF |
+| 压缩参数 | GitHub 的 gzip | Windows tar |
+
+**装哪个都行**，脚本会自己算 integrity。Release 里那份更小（1.51 MB vs 1.47 MB）。
+
+</details>
 
 ## 界面预览
 

@@ -162,95 +162,156 @@ presets      redteam 28534 B / unrestricted 16078 B, both toolFilter=0
 
 ## Install
 
-**Do not use a plugin marketplace**: one-click install fails with `already queued: dsh-purge`. There is no `dsh-purge` on npm; do not `pnpm add dsh-purge`.
+> **Straight answer first**: the DSH desktop app **cannot** install this plugin with
+> `dsh plugin add <url>`. That triggers a full pnpm dependency-tree resolution, and
+> `@deepseek-ai/*` are private packages that do not exist on the public npm registry,
+> so it always fails with `ERR_PNPM_META_FETCH_FAIL`. **That is a DSH ecosystem
+> limitation, not something this plugin causes.** Route 1 below is the one that works.
 
-### Quick install
+### Route 1: the install script (recommended)
 
-Is `dsh` on PATH? One command, one restart, one click. Run the one matching the host you have open (`desktop` instead of `web` for the desktop app):
-
-```sh
-# Official `dsh web`
-dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-
-# Official desktop EXE
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-```
-
-1. **Fully quit and reopen** that host. Web: stop `dsh web` and start it again. Desktop: quit from the tray too, then relaunch the exe.
-2. In that host click **dsh-purge** next to the session title → **Clean** → **Apply**. It restarts once on success.
-
-Done — run `/purge status` in chat to verify.
-
-### Step by step
-
-**Step 1 — pick the host.** Official `dsh web` and the official desktop EXE are **installed and applied separately**.
-
-| You are using | profile |
-| --- | --- |
-| Official `dsh web` | `web` |
-| Official desktop EXE | `desktop` |
-
-**Step 2 — install the plugin.** Use the `codeload.github.com` URL form, not `github.com/.../archive`: the latter 302-redirects and pnpm reports `fetch failed`.
-
-With `dsh`: run the quick-install command for your side. If the current directory is already this repository, use `.` instead of the URL.
-
-pnpm only (no `dsh` needed): enter the profile you actually use, not the repository root.
-
-```sh
-cd "$DSH_HOME/profiles/web"    # profiles/desktop for the desktop app
-pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-```
-
-Windows PowerShell:
+Download `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` from
+[Releases](https://github.com/L1daye/dsh-purge-nolimit/releases), then in PowerShell:
 
 ```powershell
-cd "$env:USERPROFILE\.dsh\profiles\web"   # profiles\desktop for the desktop app
-pnpm add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
+# with the script and the tarball in the same directory
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
-`pnpm add` and `dsh plugin add` both fetch the package; `postinstall` then writes `dsh-purge` into `dsh.profile.bundles` and adds the `insert` entry to the profile's `cordis.patch.yml`. Without that line the host does not load the plugin and no button appears.
+The script does the whole sequence: back up, stop the host, verify SHA512, extract,
+patch `package.json`, rewrite all three lockfiles, check `cordis.patch.yml`, restart
+the host, then read the status.
 
-**Done when:** `node_modules/dsh-purge/package.json` exists, `bundles` contains `"dsh-purge"`, and `cordis.patch.yml` has an `insert` entry with `id: dsh-purge`.
-
-- pnpm 11/12 blocks install scripts by default (`ERR_PNPM_IGNORED_BUILDS`); allow the build explicitly:
-
-```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-# Already installed with only a warning — the full specifier is required:
-pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
-# If bundles / insert are still missing:
-node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
+```
+[1]  validate tarball / profile / host
+[2]  back up to %USERPROFILE%\dsh-purge-install-backup-<timestamp>
+[3]  stop the host
+[4]  compute SHA512 (written into the lockfile integrity)
+[5]  extract into node_modules/dsh-purge
+[6]  patch package.json (dependency + bundles)
+[7]  rewrite the three lockfiles
+[8]  check cordis.patch.yml
+[9]  verify key files
+[10] start the host
+[11] read /dsh-purge/status
 ```
 
-**Step 3 — restart the host.** Writing the plugin into the profile does **not** modify `@deepseek-ai` yet.
+**It only touches the target profile, and every step is preceded by a backup.**
 
-**Done when:** **dsh-purge** appears next to the session title.
+Common flags:
 
-**Step 4 — apply and verify.** In **that host** click **dsh-purge** → **Clean** → **Apply**. It restarts once on success.
+```powershell
+# see what would happen, change nothing
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -DryRun
 
-**Done when:** `/purge status` prints `DSH_HOME` and the patch list for the installation you are actually using.
+# install into the web profile
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -Profile web
 
-**Step 5 — troubleshooting.**
-
-- **No button next to the session title.** Run `dsh --dump-config` in that profile and check for an `id: dsh-purge` body line. If it is missing, rerun `ensure-profile-bundle.mjs` from step 2, then fully quit and reopen the host.
-- **Marketplace reports `already queued: dsh-purge`.** Stop using the marketplace; install with `dsh plugin add` or pnpm. If the CLI also claims it is already installed, remove then reinstall:
-
-```sh
-dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main
+# do not restart automatically
+.\scripts\install-standalone.ps1 -Tarball .\pkg.tar.gz -NoRestart
 ```
 
-### Offline install (this repository's tarball)
+**After it finishes, open the host and click dsh-purge next to the session title,
+then Clean, then Apply** - that writes the host patches, which the script leaves to
+you on purpose.
 
-This repository also ships a prebuilt `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` (2.1 MB):
+### Route 2: manual (only if the script cannot run)
 
-```sh
-dsh plugin --profile desktop add file:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+<details>
+<summary><strong>Expand the manual steps</strong></summary>
+
+**Prerequisite**: the tarball from Releases, and your `$DSH_HOME`
+(usually `%USERPROFILE%\.dsh`).
+
+**1. Stop the host**, tray included.
+
+**2. Extract into the plugin directory:**
+
+```powershell
+$home = "$env:USERPROFILE\.dsh"
+$prof = "$home\profiles\desktop"
+Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
+tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
-Manual Windows deployment (`@deepseek-ai/*` are private packages pnpm cannot fetch from the public registry) is documented in [AGENTS.md section 5](./AGENTS.md#5-发布流程).
+**3. Patch the profile `package.json`** (`$prof\package.json`) in two places:
 
----
+```json
+{
+  "dependencies": {
+    "dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app", "dsh-purge"]
+    }
+  }
+}
+```
+
+**4. Rewrite the three lockfiles.** This is the painful step - `integrity` must be
+recomputed:
+
+```powershell
+# SHA512 of the tarball, Base64 (not hex)
+$sha = [System.Security.Cryptography.SHA512]::Create()
+$fs = [System.IO.File]::OpenRead("C:\absolute\path\pkg.tar.gz")
+$b64 = [Convert]::ToBase64String($sha.ComputeHash($fs))
+$fs.Dispose()
+"sha512-$b64"
+```
+
+The three files: `pnpm-lock.yaml`, `node_modules\.pnpm\lock.yaml`, and
+`node_modules\.modules.yaml` (the last one is JSON).
+
+**Use the script instead.** Hand-editing easily leaves stale entries and puts pnpm
+into an inconsistent state.
+
+</details>
+
+### Verifying the install
+
+```powershell
+# 1. files present
+Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\lib\core.js"
+
+# 2. host sees it (after the host starts)
+(Invoke-WebRequest http://127.0.0.1:<port>/dsh-purge/status -UseBasicParsing).Content
+# expect: plugin=2.3.32-dsh022  patches=74/74
+```
+
+**A panel count of `74/74` means every patch is in place.** If you see a different
+number, press Apply and restart once.
+
+### Why `dsh plugin add <github-url>` does not work
+
+```
+ERR_PNPM_META_FETCH_FAIL
+GET https://registry.npmjs.org/@deepseek-ai%2Fdsh-hooks-codex: fetch failed
+```
+
+`dsh plugin add` reinstalls the whole dependency tree, and `@deepseek-ai/*` are
+private packages bundled with DSH that do not exist on public npm. A proxy does not
+help - **the package simply is not there.**
+
+**No DSH plugin should be installed that way on the desktop build.** Use Route 1.
+
+<details>
+<summary><strong>Why the Release tarball differs from the GitHub source archive</strong></summary>
+
+The contents are **byte-equivalent** (measured: 135/135 files, identical hashes after
+newline normalisation); only the compressed artifacts differ:
+
+|  | GitHub auto-archive | Release tarball |
+| --- | --- | --- |
+| Top directory | `dsh-purge-nolimit-main/` | none (flat) |
+| Line endings | Git converts to LF | CRLF kept |
+| gzip | GitHub's | Windows tar |
+
+**Either works** - the script computes the integrity itself.
+
+</details>
 
 ## Preview
 
