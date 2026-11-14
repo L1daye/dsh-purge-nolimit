@@ -5,3 +5,19 @@ Source: https://github.com/YuJunZhiXue/dsh-purge
 
 This product is licensed under the Apache License, Version 2.0.
 Derivative works must retain this NOTICE and attribution.
+
+---
+
+Fork: dsh-purge full-unrestricted (2.3.32-dsh022)
+Copyright 2026 L1daye
+Source: https://github.com/L1daye/dsh-purge
+
+Modifications from the original:
+  - Removed all range gates (public / private / domain targets allowed)
+  - Removed the game-cheat ban from the default prompt
+  - Removed drill-platform authorisation dialogs
+  - Added: unrestricted agent preset, refusal retry, injection probe,
+    atomic write hardening, observability layer (verify / preflight / trace)
+  - Rewrote the patch table for DSH 0.2.2 and added 150 unit tests
+
+The original authors' no-resale and attribution requirements are honoured.

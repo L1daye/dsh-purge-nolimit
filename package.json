@@ -58,11 +58,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YuJunZhiXue/dsh-purge.git"
+    "url": "git+https://github.com/L1daye/dsh-purge.git"
   },
-  "homepage": "https://github.com/YuJunZhiXue/dsh-purge#readme",
+  "homepage": "https://github.com/L1daye/dsh-purge#readme",
   "bugs": {
-    "url": "https://github.com/YuJunZhiXue/dsh-purge/issues"
+    "url": "https://github.com/L1daye/dsh-purge/issues"
   },
   "dsh": {
     "bundle": {
@@ -80,9 +80,9 @@
     },
     "install": {
       "preferred": "tarball",
-      "tarball": "https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master",
-      "zip": "https://codeload.github.com/YuJunZhiXue/dsh-purge/zip/refs/heads/master",
-      "git": "https://github.com/YuJunZhiXue/dsh-purge.git"
+      "tarball": "https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main",
+      "zip": "https://codeload.github.com/L1daye/dsh-purge/zip/refs/heads/main",
+      "git": "https://github.com/L1daye/dsh-purge.git"
     }
   },
   "publishConfig": {
@@ -94,5 +94,21 @@
   "engines": {
     "node": ">=18"
   },
-  "dshTarget": "0.2.1-rc.2"
+  "dshTarget": "0.2.1-rc.2",
+  "author": {
+    "name": "L1daye",
+    "url": "https://github.com/L1daye"
+  },
+  "contributors": [
+    {
+      "name": "YuJunZhiXue",
+      "url": "https://github.com/YuJunZhiXue",
+      "comment": "original author of dsh-purge"
+    },
+    {
+      "name": "L1daye",
+      "url": "https://github.com/L1daye",
+      "comment": "full-unrestricted fork maintainer"
+    }
+  ]
 }

@@ -4,66 +4,87 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge）</h1>
 
-<p align="center"><strong>Version 1.1.81</strong></p>
+<p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
 <p align="center">
-  <em>DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；默认提示词面向国模「小码酱」。Jailbreak for every model — swap prompts per model. 求 Star 收藏 ⭐ 如要二开，请查看署名要求部分</em>
+  <em>DeepSeek Harness 全量破甲：无靶场限制、无外挂拦截、无授权弹窗。Jailbreak for every model — full-unrestricted build.</em>
 </p>
 
 <p align="center">
-  <a href="https://github.com/YuJunZhiXue/dsh-purge/stargazers"><img src="https://img.shields.io/github/stars/YuJunZhiXue/dsh-purge?logo=github&label=Stars" alt="GitHub stars"></a>
-  <a href="https://github.com/YuJunZhiXue/dsh-purge/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
-  <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="awesome · DSH plugin"></a>
-  <a href="https://deepseek.stream/plugins/dsh-purge"><img src="https://img.shields.io/badge/Hub-dsh--purge-1a73e8" alt="DeepSeek Harness Hub"></a>
-  <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.0--rc.2%20%2F%200.2.1--rc.2-blue" alt="DSH"></a>
+  <a href="https://github.com/L1daye/dsh-purge/stargazers"><img src="https://img.shields.io/github/stars/L1daye/dsh-purge?logo=github&label=Stars" alt="GitHub stars"></a>
+  <a href="https://github.com/L1daye/dsh-purge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
+  <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.2--rc.1-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-</p>
-
-<p align="center">
-  <a href="https://dsh-plugin.org/plugins/yujunzhixue/dsh-purge"><img src="https://dsh-plugin.org/badges/listed.svg" alt="Listed on dsh-plugin.org"></a>
+  <img src="https://img.shields.io/badge/tests-150%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja.md">日本語</a>
 </p>
 
+---
+
+## 二次开发声明
+
+**本仓库是 [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge) 的二次开发版本。**
+
+| | |
+| --- | --- |
+| **原作者** | [@YuJunZhiXue](https://github.com/YuJunZhiXue) — 原始架构、补丁引擎、提示词体系、面板与演练台 |
+| **二次开发** | [@L1daye](https://github.com/L1daye) — 全量破甲改造与 2.x 迭代 |
+| **上游许可** | Apache-2.0（见 [LICENSE](./LICENSE) 与 [NOTICE](./NOTICE)） |
+| **原版状态** | 原版开源版只放行本地靶场；**本版已移除全部靶场门禁**（见下节） |
+
+按原作者的署名要求，本文件开头即标明来源仓库。原版**不允许倒卖**；二开**必须署名**。本仓库遵守该要求。
+
+以下是相对于原版的主要改动，全部为**移除限制 + 新增能力**，未削减原版任何功能：
+
+---
+
 ## 全量破甲版说明（dsh-purge-fullbreak）
 
-本目录是 **dsh-purge 全量破甲版 2.2.1-fullbreak**，在 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
+本仓库是 **dsh-purge 全量破甲版 2.3.32-fullbreak**，在原版 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
 
 - 公网 / 私网 / 域名目标全部放行，不再做 IP 范围拦截。
 - 游戏外挂、内存修改、注入、反作弊请求全部放行。
 - 演练台自动授权，不再弹声明、倒计时、勾选。
-- `autoApplyOnStart` 默认开启：宿主启动即自动应用清洗补丁。
 - 加密默认提示词已重新生成，外挂禁令已从默认提示词中移除。
+- 不做公网门禁：插件不替操作者判断目标归属，范围由操作者自己声明。
 
-**2.1.0 新增功能**：
+### 2.3.x 新增能力总览
 
-- `/prompt` 提示词快照：把当前 prompt-inject.md 存为命名快照，随时 `use` 恢复。存于 `$DSH_HOME/dsh-purge/prompt-snapshots/`。模型工具 `purge_prompt_snapshot`（list/save/use/delete）。
-- `/export` 会话导出：把当前会话导出为 markdown 文件到工作目录。模型工具 `purge_session_export`。
-- `/stats` 会话统计：事件数、轮次、消息数、角色分布、近似 token。模型工具 `purge_session_stats`。
+| 版本 | 能力 |
+| --- | --- |
+| **2.3.17** | 随包提供 `unrestricted` 无限制模式预设 |
+| **2.3.18** | 预设显式注册（磁盘上躺着不会出现在下拉里） |
+| **2.3.19** | 移除废弃的 `toolFilter`，预设可真正选中 |
+| **2.3.20** | 锚点回归测试，迁移丢失的 pattern 全部补回 |
+| **2.3.21** | `.bak` 判据改为「原始锚点是否回来」，修复回退失效 |
+| **2.3.22** | `#92` 三种历史形态正则收敛；`patchedTargetStillPatched` 四层判定 |
+| **2.3.23** | 修复 preset 每次宿主重启退版 |
+| **2.3.24** | `#91`/`#92` surface 隔离；`patchStatus` 支持 `options.surface` |
+| **2.3.25** | **拒绝重试**：模型推脱时自动追加 nudge 重新回答 |
+| **2.3.26** | 修复事件钩子（`agent/status` 不带 agent） |
+| **2.3.27** | 修复重试计数器被清零导致的**无限重试** |
+| **2.3.28** | **原子写入**：权限保持、rename 退避重试、临时名唯一 |
+| **2.3.29** | **注入探针**：证明提示词真的到达模型 |
+| **2.3.30** | 修复探针 section 注册位置 |
+| **2.3.31** | 探针判据改为读会话日志，不依赖模型回显 |
+| **2.3.32** | 修复会话文件大小上限造成的**假阴性** |
 
-**2.2.0 新增 / 修复**：
+### 2.2.x 与更早
 
-- `/audit` 全破自检：逐项核对会话门禁、外挂检测、靶场放行、演练台授权、默认提示词、hooks 旁路是否真的全开，返回 pass/fail 表。模型工具 `purge_audit`，HTTP 路由 `GET /dsh-purge/audit`。
-- `/prompt export <名字> <路径>` / `/prompt import <名字> <路径>`：把快照导出到任意文件 / 从文件导入为快照，便于分享和备份提示词卡组。
-- `/prompt use` 恢复前自动备份当前 prompt-inject.md（快照名 `autobak-<时间戳>`），防误覆盖。
-- 修复 `purge_session_stats` 的近似 token 只按事件类型字符估算的错误——现在按真实消息正文与工具参数估算。
-- 修复全破版 `writeAllowText` 空实现：面板「目标范围」页保存名单不再静默空返回，现在会真正写入 `$DSH_HOME/net-scope-allow.txt`。
+**2.2.1 修复面板 404 / 405**：`installWebServer` 原本是 `applyHostHooks()` 的最后一行，前面的 hook / 命令 / 工具注册只要有一条抛错，后面的 HTTP 路由就全部挂不上 → 面板「还原/卸载」点不动。改为**路由最先注册**，每个注册点单独 try-catch。
 
-**2.2.1 修复面板 404 / 405**（v2.2.0 暴露的结构性缺陷）：
+**2.2.0**：`/audit` 全破自检、`/prompt export|import` 快照导入导出、`/prompt use` 自动备份。
 
-- **根因**：`installWebServer(ctx, cfg)` 原本是 `applyHostHooks()` 的**最后一行**。前面的 hook / 命令 / 工具注册只要有一条抛错（例如 `/audit` 命中宿主保留字），后面的 HTTP 路由就全部挂不上 → 面板「还原/卸载」点不动、显示 `读取失败: 404 Not Found`。
-- 改为**路由最先注册**，且 `registerPluginRoute` / `tryRegisterCommand` / 钩子安装全部单独 try-catch，任何单点失败都不再带塌路由。
-- 移除插件内所有 `405 Method Not Allowed` 分支（rules / skills / prompt-snapshots）：除 OPTIONS 外一律按 GET 处理，POST 才读 body。
-
-原作者为 [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)（Apache-2.0）。本修改版仅供本地研究，安装方式与原文一致。
+**2.1.0**：`/prompt` 提示词快照、`/export` 会话导出、`/stats` 会话统计。
 
 ---
 
-## 作者说几句（原版）
+## 原作者说几句（原文保留）
 
 市面上有人把这份开源明目张胆挂出去卖。后面作者这边被找去谈过话——经过不必写，你们自己品。
 
@@ -73,114 +94,101 @@
 
 作者个人频道：[t.me/LLM_PoJia](https://t.me/LLM_PoJia)。有话、有更新，会发在那里。
 
+> **关于本版**：上面那段里的"公网一律不许碰"与"禁止制作外挂"是**原版开源版**的限制。本仓库是全量破甲版，这两条**已移除**——见前文「全量破甲版说明」。原作者的其余要求（不倒卖、二开署名）本仓库完全遵守。
+
+---
+
 ## 目录
 
-- [作者说几句](#作者说几句)
+- [二次开发声明](#二次开发声明)
+- [全量破甲版说明](#全量破甲版说明dsh-purge-fullbreak)
+- [原作者说几句](#原作者说几句原文保留)
 - [介绍](#介绍)
 - [署名要求](#署名要求)
 - [许可证](#许可证)
 - [适配范围](#适配范围)
 - [安装](#安装)
-- [界面](#界面预览)
+- [界面预览](#界面预览)
+- [目录结构](#目录结构)
 - [使用](#使用)
+- [新增模块详解](#新增模块详解)
+- [响应速度](#响应速度)
+- [本地校验](#本地校验)
 - [工作原理](#工作原理)
 - [还原](#还原)
+- [路径探测](#路径探测)
 - [更新](#更新)
+- [开发文档](#开发文档)
 
 ---
 
 ## 介绍
 
-**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **1.1.81** 已适配 **DSH 0.2.1-rc.2**（0.2.0 仍可用）。**不支持 DSH 0.2.1-rc.3 及更新的 rc。** 官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
+**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **2.3.32** 适配 **DSH 0.2.2-rc.1**（0.2.2-rc.2 / rc.3 / rc.5 同样通过）。官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
 
 Harness 不只是把问题交给模型。它还会在运行时改提示词、审批门、沙箱和会话格式。只看「模型答不答」，会把宿主拦截误当成模型拒绝。这个插件在你自己的安装里把这两层分开，用来做受控评测，也用来看默认策略该不该收紧。
 
-
-| 你会用到             | 它做什么                                            |
-| ---------------- | ----------------------------------------------- |
-| **dsh-purge 侧栏** | 会话标题旁的按钮打开右侧栏。里面两页：清洗、演练台                       |
-| **清洗**           | 分组查看补丁，应用、还原、卸载；编辑提示词和多套规则                      |
-| **演练台**          | 正式版内置。授权后查看资产和本机环境。开源版不下发技能库和知识库。只用于本机/内网本地靶场 |
-| **宿主策略**         | 调整默认文案、权限策略和工具上限。官方能力保留，不另写一套身份                 |
-| **启动时**          | 自动再检查并应用。npm 升级盖掉 `node_modules` 之后不用手改文件       |
-
+| 你会用到 | 它做什么 |
+| --- | --- |
+| **dsh-purge 侧栏** | 会话标题旁的按钮打开右侧栏。里面两页：清洗、演练台 |
+| **清洗** | 分组查看补丁，应用、还原、卸载；编辑提示词和多套规则 |
+| **演练台** | 授权后查看资产和本机环境 |
+| **宿主策略** | 调整默认文案、权限策略和工具上限。官方能力保留，不另写一套身份 |
+| **启动时** | 自动再检查并应用。npm 升级盖掉 `node_modules` 之后不用手改文件 |
 
 不写死盘符。按 `$DSH_HOME`、dsh 启动器旁边的 `.dsh`，再退回 `~/.dsh`。不改 Harness 源码仓库，在 **dsh-purge** 的「清洗」里点「应用」才写入。身份来自插件里的加密提示词，也就是提示词框默认显示的那一份。不读取宿主磁盘上的提示词文件。
 
-本插件只处理使用者本机已安装的官方 `@deepseek-ai` 包和本机配置。它不是公网扫描器，也不是针对第三方站点的攻击套件。仓库内不含木马、未授权渗透脚本或对外攻击载荷。
+本插件只处理使用者本机已安装的官方 `@deepseek-ai` 包和本机配置。
 
 ---
-
-## 📌 原版不允许倒卖。二开必须署名。
 
 ## 署名要求
 
 **原版不允许倒卖。** 不得收费转卖、换皮上架、当货挂群。
 
-**二开必须署名**，并写明来源仓库：[YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。借用本项目的名称、思路、代码或提示词，同样必须署名。
+**二开必须署名**，并写明来源仓库：[YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。借用原项目的名称、思路、代码或提示词，同样必须署名。
 
-不署名、隐瞒来源、改头换面据为己有，或把原版拿去倒卖，作者将依法追究责任。
+不署名、隐瞒来源、改头换面据为己有，或把原版拿去倒卖，原作者将依法追究责任。
+
+**本仓库的署名**：见[二次开发声明](#二次开发声明)。
 
 ## 许可证
 
 本仓库使用 [Apache License 2.0](./LICENSE)。二开、再分发必须保留版权声明和 [NOTICE](./NOTICE)，写明来源 [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。原版不允许倒卖。
 
----
-
-
-
-
-
-### ⚠️ 严正法律免责与合规使用声明
-
-
-
-**免责声明：** 本项目为非营利开源项目，遵守国家法律法规及所在平台的相关规范，仅供学习与研究使用。不得将本项目用于任何违法违规用途；由此产生的后果由使用者自行承担。
-
-**【零容忍严正申明】**：本项目坚决反对并严禁任何形式的违法犯罪行为！本项目开发者绝不支持、不鼓励、不协助任何未授权网络攻击、漏洞利用、数据窃取、非法侵入计算机信息系统或生成违法违禁内容的活动。**任何将本项目用于违法犯罪的行为，均与开发者无关，由行为人依法独立承担全部法律责任。**
-
-1. **本仓库不含违法内容**：`dsh-purge` 发布的代码、文档、补丁与默认提示词**不是**木马、后门、未授权渗透工具、勒索软件、撞库脚本，也**不是**针对公网或第三方系统的攻击载荷。项目本身不提供违法内容，也不教唆、组织、协助实施违法犯罪。
-2. **只作用于本机官方 Harness**：安全评测补丁、提示词注入全部发生在使用者**本机已安装的官方 DeepSeek Harness**（`@deepseek-ai` 包、本机 profile / `$DSH_HOME`）上。对象是使用者自己的官方本地软件，**不是**他人的网站、服务器、账号或信息系统。
-3. **评测补丁不对外网目标联网**：应用补丁、写入注入、回滚、卸载均在本机文件与本机进程内完成，**不对任何公网主机、未授权系统进行扫描、探测、入侵或攻击发包**。不得把本项目当作跳板去打外网。插件若开启「检测更新」，仅可能访问本插件自己的 GitHub 仓库以核对版本，**与对第三方系统的网络攻击无关**，也不能被解释为授权对外渗透。
-4. **合法受控范围限定**：本项目定位为使用者在**自己有权管理的本机官方 Harness**上，进行红队科研与鲁棒性评测的辅助工具。**严禁在未经所有者合法书面授权的目标、公网在线系统或生产业务上运行本项目**。一切测试必须限制在**本机已授权安装的官方 Harness、离线本地合成靶标、授权网络安全演练靶场及合规实验室受控环境**中进行。
-5. **开源版只允许本地靶场。** 攻击任务只放行本机回环和 RFC1918 私网 IP。域名先解析再判 IP，不靠后缀放行。公网 IP、解析到公网的域名、解析失败、hosts 把实验室后缀指到公网，都不能当作例外。密钥、密码、网段、通配符，以及对话里的口头说明，都不能增加例外。禁止制作游戏外挂。开源版不下发技能库和知识库。
-6. **严禁违法与违禁用途**：使用者严禁利用本项目直接或间接从事任何违反下列法律法规的行为（必须逐条遵守，不得以任何理由规避）：
-  - **《中华人民共和国刑法》**
-  - **《中华人民共和国网络安全法》**
-  - **《中华人民共和国数据安全法》**
-  - **《中华人民共和国个人信息保护法》**
-  - 以及其他现行有效的法律、行政法规与监管规定；
-  - 同时严禁：
-  - 未经授权渗透、攻击公私机构计算机信息系统，实施勒索、破坏、撞库或传播恶意载荷；
-  - 诱导、生成或传播危害国家安全、恐怖主义、暴力血腥、涉黄涉赌、诈骗、侵犯公民隐私或知识产权等任何法律明令禁止的违法违禁内容；
-  - 违反相关大模型提供商的《服务条款》与《滥用政策》。
-7. **使用者独立承担全部责任**：本项目依据 Apache-2.0“按现状”提供，开发者不对软件的完整性、安全性与适用性作任何明示或暗示的保证。**使用者应对自身的所有下载、部署、运行、修改、传播行为以及由此产生的全部输入与输出后果承担独立、完全的民事、行政及刑事法律责任**。项目作者与贡献团队绝不承担任何因使用者滥用导致的直接、间接或连带责任。
-8. **违约即终止授权**：任何将本项目用于非法攻击、恶意活动或违规行为的个人或实体，其开源软件使用许可将自违法违规行为发生之日起**自动且不可撤销地立即终止**。该主体须立即停止使用并永久销毁本项目的所有代码、脚本与衍生数据，并依法承担相应法律制裁。
-9. **第三方独立性声明**：本项目属于完全独立的开源安全评测研究项目，与 DeepSeek 官方或其关联主体无任何隶属、商业合作、授权或官方背书关系。文中「官方」仅指评测对象为使用者本机安装的官方 DeepSeek Harness 软件包，**不代表** DeepSeek 官方开发、认可或担保本插件。
-10. **必须署名**：借用本项目的名称、思路、代码或提示词，必须署名并标明本仓库。不署名将依法追究责任。详见 [署名要求](#署名要求)。
-
-
-
-
+商业授权与二次开发授权见 [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md)。
 
 ---
 
 ## 适配范围
 
-**1.1.81 已适配 DSH 0.2.1-rc.2**，0.2.0 仍可用。不要拿它去打 0.1.x。
+**2.3.32 已适配 DSH 0.2.2-rc.1**，0.2.2 的 rc.2 / rc.3 / rc.5 同样通过。
 
-- **dsh 0.2.1-rc.2**（官方桌面 / 官方 `dsh web`）：用 **1.1.81**。已修 `{{cwd}}` / `[cwd]` 整轮失败、补丁 #40 命中、`toolFilter` 废弃、`dsh-tools` 解析、hostFs fd、桌面换包自杀、`file:` 归档更新、Ctrl+Enter 插话。
-- **dsh 0.2.0-rc.2**：用 **1.1.40** 及以上；本页这档也能装。
-- **dsh 0.1.7**（含 rc.1 / rc.2）：用 **1.1.39** 及更早 —— 在 [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases) 里选对应标签。
-- **不支持 dsh 0.2.1-rc.3 / rc.4 及更新。** 宿主对不上时补丁会显示待应用或跳过，不会乱改文件。请退回 **0.2.1-rc.2** 再用本插件。
+| 宿主版本 | 用哪个版本 |
+| --- | --- |
+| **DSH 0.2.2-rc.1 ～ rc.5** | **2.3.32**（本版） |
+| DSH 0.2.1-rc.x | 2.2.x 或更早 |
+| DSH 0.2.0-rc.2 | 1.1.40+ |
+| DSH 0.1.7（含 rc.1 / rc.2） | 1.1.39 及更早 |
 
 对不上的补丁会显示待应用或跳过，不会乱改文件。
+
+**实测状态**（两台机器，DSH 0.2.2-rc.1）：
+
+```
+补丁     74/74 applied（applied=86 skipped=2，optional=2）
+破甲自检 11/11
+红队工具 15/15
+单元测试 150/150
+提示词   34426 B  MERGED-1.1.71（三份 SHA256 一致）
+预设     redteam 28534 B / unrestricted 16078 B，均 toolFilter=0
+```
 
 ---
 
 ## 安装
 
-**不要走插件市场**：[dsh-plugin.org](https://dsh-plugin.org) 或设置里的「插件市场」一键安装会报 `already queued: dsh-purge`，命令也走不成。npm 仓库没有 `dsh-purge` 这个名字，不要 `pnpm add dsh-purge`。
+**不要走插件市场**：一键安装会报 `already queued: dsh-purge`。npm 仓库没有 `dsh-purge` 这个名字，不要 `pnpm add dsh-purge`。
 
 ### 快速安装
 
@@ -188,25 +196,25 @@ PATH 里有 `dsh`？一条命令、一次重启、一次点击。跑你正在打
 
 ```sh
 # 官方 `dsh web`
-dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile web add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 
 # 官方桌面 EXE
-dsh plugin --profile desktop add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 ```
 
 1. **完全退出再打开**刚装的那个宿主。Web：停掉 `dsh web` 再开。桌面：托盘也要退出，再开 exe。
 2. 在这个宿主点会话标题旁的 **dsh-purge** →「清洗」→「应用」。应用成功后会自动重启一次。
 
-完成 —— 聊天里跑 `/purge status` 验证。如果 pnpm 问要不要允许构建、或者下面任何东西没出现，走后面的分步说明。
+完成 —— 聊天里跑 `/purge status` 验证。
 
 ### 分步说明
 
-**第 1 步 —— 选定宿主。** 官方 `dsh web` 和官方桌面 EXE **分开装、分开应用**，只装你正在打开的那一个。
+**第 1 步 —— 选定宿主。** 官方 `dsh web` 和官方桌面 EXE **分开装、分开应用**。
 
-| 你正在用 | profile | 安装命令 |
-|---|---|---|
-| 官方 `dsh web` | `web` | 快速安装里 `web` 那条 |
-| 官方桌面 EXE | `desktop` | 快速安装里 `desktop` 那条 |
+| 你正在用 | profile |
+| --- | --- |
+| 官方 `dsh web` | `web` |
+| 官方桌面 EXE | `desktop` |
 
 **第 2 步 —— 装插件。** 压缩包地址只用 `codeload.github.com` 这个写法，不要用 `github.com/.../archive`：后者 302，pnpm 会 `fetch failed`。
 
@@ -216,14 +224,14 @@ dsh plugin --profile desktop add https://codeload.github.com/YuJunZhiXue/dsh-pur
 
 ```sh
 cd "$DSH_HOME/profiles/web"    # 桌面改 profiles/desktop
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 ```
 
 Windows PowerShell：
 
 ```powershell
 cd "$env:USERPROFILE\.dsh\profiles\web"   # 桌面改 profiles\desktop
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 ```
 
 `pnpm add` 和 `dsh plugin add` 都会拉包；`postinstall` 再把 `dsh-purge` 写进 `dsh.profile.bundles`，并在 profile 的 `cordis.patch.yml` 补上本体 `insert`（没有这一行，宿主不加载插件，界面也没有按钮）。
@@ -233,197 +241,50 @@ pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/mas
 - pnpm 11/12 默认拦安装脚本（`ERR_PNPM_IGNORED_BUILDS`），要带上允许构建：
 
 ```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
-# 已经装上但只有警告时，必须带完整 specifier（只写 dsh-purge 会留下 set this to true or false）：
-pnpm approve-builds dsh-purge@https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
+# 已经装上但只有警告时，必须带完整 specifier：
+pnpm approve-builds dsh-purge@https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 # bundles / insert 还没写上时再补：
 node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
 ```
 
-- `dsh` 和 pnpm 都没有时，跳到[手动安装](#manual)。
-- 桌面客户端也可以点按钮（`dsh://` 唤起，下的仍是同一份压缩包）。
+**第 3 步 —— 重启宿主。** 只把插件写进 profile **还不会**改 `@deepseek-ai`。
 
-<p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.81&repo=YuJunZhiXue%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FYuJunZhiXue%2Fdsh-purge%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>唤起客户端一键安装</strong></a>
-</p>
+**完成标志：** 会话标题旁出现 **dsh-purge**。
 
-**第 3 步 —— 重启宿主。** 只把插件写进 profile **还不会**改 `@deepseek-ai`。完全退出再打开刚装的那个宿主（Web：停掉 `dsh web` 再开；桌面：托盘也要退出，再开 exe）。
+**第 4 步 —— 应用并验证。** 在**这个宿主**点会话标题旁的 **dsh-purge**，打开「清洗」，点「应用」。应用成功后会自动重启一次。
 
-**完成标志：** 会话标题旁出现 **dsh-purge**。没出现？跳到第 5 步。
+**完成标志：** 聊天里 `/purge status` 能打出 `DSH_HOME` 和补丁列表，路径是你正在用的那一份。
 
-**第 4 步 —— 应用并验证。** 在**这个宿主**点会话标题旁的 **dsh-purge**，打开「清洗」，点「应用」。宿主自己的设置页里没有这一项。应用成功后会自动重启一次，没做完不会重启。Web 的按钮只动 Web，桌面的只动桌面，不要在一个里面点另一个的应用。
+**第 5 步 —— 排障。**
 
-**完成标志：** 聊天里 `/purge status` 能打出 `DSH_HOME` 和补丁列表，路径是你正在用的那一份。没装的可选包（梁神）显示跳过，不挡住完成。
-
-**第 5 步 —— 排障。** 只有上面没有跑到「完成标志」时才看这里。
-
-- **会话标题旁没有按钮。** 在对应 profile 跑 `dsh --dump-config`（或 `dsh --profile desktop --dump-config`），看有没有本体行 `id: dsh-purge`（不是 `dsh-purge-redteam`）。没有就再跑第 2 步的 `ensure-profile-bundle.mjs`，然后完全退出重开宿主。升到本版本后，若演练台子行已经在跑，它也会在启动时把缺的 insert 补上，再完全退出重开一次即可。开头那几条 `entry "redteam-store" not found` 只是旧红队包不在，可以忽略。
-- **市场报 `already queued: dsh-purge`。** 不要再点市场；回到第 2 步用 `dsh plugin add` 或 pnpm 装。命令也说已经有了，就先卸再装，然后重走第 3 步：
+- **会话标题旁没有按钮。** 在对应 profile 跑 `dsh --dump-config`，看有没有本体行 `id: dsh-purge`。没有就再跑第 2 步的 `ensure-profile-bundle.mjs`，然后完全退出重开宿主。
+- **市场报 `already queued: dsh-purge`。** 不要再点市场；用 `dsh plugin add` 或 pnpm 装。命令也说已经有了，就先卸再装：
 
 ```sh
 dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile desktop add https://codeload.github.com/L1daye/dsh-purge/tar.gz/refs/heads/main
 ```
 
-只有 pnpm 时：
+### 离线安装（本仓库的 tar.gz）
+
+本仓库另提供打包好的 `dsh-purge-2.3.32-dsh022.tar.gz`（2.1 MB）：
 
 ```sh
-cd "$DSH_HOME/profiles/desktop"
-pnpm remove dsh-purge
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
+dsh plugin --profile desktop add file:/绝对路径/dsh-purge-2.3.32-dsh022.tar.gz
 ```
 
-Web 端把 `desktop` 换成 `web`。
-
-### 高级
-
-**交给助手安装。** 把下面整段发给本机助手。它只执行安装命令：不要全盘搜索、不要改其它文件、不要代点「应用」、不要重启。
-
-<details>
-<summary><strong>给 AI 助手（只安装）</strong></summary>
-
-<!-- AI-AGENT-START -->
-
-安装 DeepSeek Harness 插件 `dsh-purge`，只装到 Web profile。不要全盘搜索，不要读或改其它文件，不要应用设置，也不要重启应用。不要装到桌面 profile。不要走插件市场。npm 仓库没有这个包名，不要 `pnpm add dsh-purge`。
-
-**Web 端（官方 `dsh web`）**
-
-有 `dsh`：
-
-```sh
-dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
-```
-
-没有 `dsh`、只有 pnpm：找到 `$DSH_HOME/profiles/web`（常见 `~/.dsh/profiles/web`），在该目录执行：
-
-```sh
-pnpm add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master
-```
-
-当前目录已是本仓库且有 `dsh` 时改用 `dsh plugin --profile web add .`。`dsh` 和 pnpm 都没有再告诉用户后停止。
-
-命令结束后，提醒用户：完全退出并重启 `dsh web`，再点会话标题旁的 **dsh-purge**，在「清洗」里点「应用」。然后停止。
-
-<!-- AI-AGENT-END -->
-
-</details>
-
-<a id="manual"></a>
-
-**手动安装。** 命令装不上、或 `dsh` 不在 PATH 时用这个。只改**正在用的那个宿主**对应的 profile，不要动另一个，也不要删原有 bundle。
-
-<details>
-<summary><strong>完整手动步骤</strong></summary>
-
-**1. 找到真正在用的 `$DSH_HOME`。** 认目录：名字是 `.dsh`（官方 EXE 偶见 `dsh-home`），里面有 `profiles`，且至少有一个 `profiles/<名>/package.json`。按顺序找：`DSH_HOME` 环境变量 → 安装根旁边的 `.dsh`（便携包）→ `%USERPROFILE%\.dsh` 或 `~/.dsh` → `%APPDATA%` / `%LOCALAPPDATA%\DeepSeek Harness\dsh-home`。确认：`profiles/web/package.json` 里 `"name"` 是 `dsh-profile-web`（桌面是 `dsh-profile-desktop`）。本机常有两份 `.dsh`，要用你**实际启动**的那个宿主对应的那份。
-
-Windows PowerShell 列候选：
-
-```powershell
-$cands = @()
-if ($env:DSH_HOME) { $cands += $env:DSH_HOME }
-$cands += "$env:USERPROFILE\.dsh"
-$dsh = Get-Command dsh -ErrorAction SilentlyContinue
-if ($dsh) {
-  $dir = Split-Path $dsh.Source
-  $cands += @((Join-Path $dir ".dsh"), (Join-Path (Split-Path $dir) ".dsh"), (Join-Path (Split-Path (Split-Path $dir)) ".dsh"))
-}
-$cands += @("$env:APPDATA\DeepSeek Harness\dsh-home", "$env:LOCALAPPDATA\DeepSeek Harness\dsh-home")
-$cands | Select-Object -Unique | Where-Object { $_ -and (Test-Path (Join-Path $_ "profiles")) }
-```
-
-**2. 把插件放到 `$DSH_HOME/plugins/dsh-purge`**（目录名必须是 `dsh-purge`，其 `package.json` 里 `"name"` 也必须是 `dsh-purge`）。
-
-```sh
-git clone https://github.com/YuJunZhiXue/dsh-purge.git "$DSH_HOME/plugins/dsh-purge"
-```
-
-没有 git：下载 [master.tar.gz](https://github.com/YuJunZhiXue/dsh-purge/archive/refs/heads/master.tar.gz)，解压后把 `dsh-purge-master` 改名为 `dsh-purge`，整夹放到 `plugins` 下。已有本仓库副本就复制整个目录，不要只拷几个 `.js`。
-
-**3. 只改对应 profile 的 `package.json`，先备份。** Web → `$DSH_HOME/profiles/web/package.json`；桌面 → `$DSH_HOME/profiles/desktop/package.json`。**只追加两处**，原有依赖和 bundle 全部留着：
-
-1. `dependencies` 增加 `"dsh-purge": "file:../../plugins/dsh-purge"`
-2. `dsh.profile.bundles` **末尾**追加 `"dsh-purge"`（已有就不要再加）
-
-```json
-{
-  "name": "dsh-profile-web",
-  "private": true,
-  "dependencies": {
-    "dsh-purge": "file:../../plugins/dsh-purge"
-  },
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "dsh-purge"
-      ],
-      "patchReload": "live"
-    }
-  }
-}
-```
-
-JSON 要合法（新增项前面有逗号，最后一项后面没有多余逗号）。`file:../../plugins/dsh-purge` 不要改成绝对路径，`patchReload`、其它插件、版本号都不要动，`"dsh-purge"` 不要写两次。桌面端没有 `dsh-web-app` 就不要硬加。
-
-**4. 只在刚改的那个 profile 目录装依赖**（`cd` 进 profile 目录，不要在仓库根或 `$DSH_HOME` 根）：
-
-```sh
-cd "$DSH_HOME/profiles/web"   # 或 profiles/desktop
-pnpm install
-```
-
-成功标志：出现 `profiles/<web|desktop>/node_modules/dsh-purge/package.json`。找不到 `pnpm` 就用官方 `dsh` 自带的 Node / pnpm；报 `Could not resolve` 就检查 `file:` 路径；JSON 解析失败就修逗号或还原备份。
-
-**5. 完全退出该宿主，再启动，再点「应用」** —— 即第 3 步和第 4 步。按钮会出现在会话标题旁，只在这个宿主点「应用」（或 `/purge apply`）。没出现多半是改错了另一份 `.dsh`，回到第 1 步核对。
-
-</details>
-
-**卸载。** 会话标题旁的 **dsh-purge** →「清洗」→「卸载」。弹窗确认：会先还原已应用的补丁，还原回原版 Harness，再重启当前宿主。停用或卸载时会把「智能体预设」里指向红队模式的默认值改回 `standard`，避免宿主因找不到 `redteam` 而无法新建会话。
-
-<details>
-<summary><strong>卸载命令与配置</strong></summary>
-
-```sh
-# 也可以用命令行 / 聊天
-dsh-purge --uninstall
-# /purge uninstall
-```
-
-插件配置在 `cordis.patch.yml`（`postPrompt` 默认为空）：
-
-```yaml
-- insert:
-    - id: dsh-purge
-      name: 'dsh-purge'
-      config:
-        enabled: true
-        autoApplyOnStart: true
-        autoUpdateOnStart: false
-        autoRevertOnMissing: false
-        verbose: false
-        postPromptOrder: 5100
-        postPrompt: ""
-```
-
-</details>
+Windows 手工部署（`@deepseek-ai/*` 是私有包，pnpm 从公网拉不到）见 [AGENTS.md 第 5 节](./AGENTS.md#5-发布流程)。
 
 ---
 
 ## 界面预览
 
-会话标题旁有 **dsh-purge**。点开是右侧栏，两页：**清洗** 和 **演练台**。白 / 墨可切换。补丁按组展开，进度只计真正已应用的项。规则集在上方列表启用或删除，下方编辑正文。
-
-第一次进演练台要先读声明、等倒计时、滚到文末并勾选三项。清洗不需要这一步。演练台只用于你有权管理的本机、离线靶标，或已经书面授权的演练环境。
+会话标题旁有 **dsh-purge**。点开是右侧栏，两页：**清洗** 和 **演练台**。白 / 墨可切换。补丁按组展开，进度只计真正已应用的项。
 
 **清洗**
 
 ![清洗](docs/preview/dock-clean.png)
-
-**演练台授权**
-
-![演练台授权](docs/preview/dock-auth.png)
 
 **演练台**
 
@@ -437,29 +298,42 @@ dsh-purge --uninstall
 
 ![规则集](docs/preview/rules.png)
 
-**本地靶场**
-
-开源版只放行本机/内网。清洗页会写明这一点，不能再登记公网服务器。
-
-
-| 区域        | 说明                                                                                                         |
-| --------- | ---------------------------------------------------------------------------------------------------------- |
-| dsh-purge | 会话标题旁的按钮，打开或收起右侧栏                                                                                          |
-| 清洗        | 补丁、提示词、规则集                                                                                                 |
-| 演练台       | 授权后的资产与环境页。开源版不下发技能库和知识库。未授权时按钮标「未授权」                                                                   |
-| 补丁        | 分组查看状态，应用、还原或卸载                                                                                            |
-| 提示词       | 编辑 `prompt-inject.md`，作为会话覆盖段                                                                              |
-| 本地靶场      | 只放行本机/私网 IP；域名先解析，全部地址都必须是私网或回环                                                         |
-| 规则集       | 多套 `AGENTS.md` / `CLAUDE.md`；启用写入 `$DSH_HOME`，删除从列表去掉                                                      |
-
+| 区域 | 说明 |
+| --- | --- |
+| dsh-purge | 会话标题旁的按钮，打开或收起右侧栏 |
+| 清洗 | 补丁、提示词、规则集 |
+| 演练台 | 资产与环境页（本版自动授权，无倒计时） |
+| 补丁 | 分组查看状态，应用、还原或卸载 |
+| 提示词 | 编辑 `prompt-inject.md`，作为会话覆盖段 |
+| 规则集 | 多套 `AGENTS.md` / `CLAUDE.md`；启用写入 `$DSH_HOME`，删除从列表去掉 |
 
 ---
 
 ## 目录结构
 
-`bin/` 是命令行，`lib/` 是补丁和演练台，`presets/redteam/` 是红队预设，`client.js` 是侧栏。开源版不下发 `skills/` 和知识库。
+```
+bin/                 命令行
+lib/                 补丁表、应用引擎、注入、观测、探针
+  core.js            补丁表 ALL_PATCHES（88 条）+ 应用引擎 + targetFiles
+  index.js           cordis 插件入口、HTTP 路由、systemPrompt waterfall
+  identity.js        身份判定、preset 识别、注入正文改写
+  verify.js          飞行记录仪 + 时间线
+  probe.js           注入探针（2.3.29+）
+  refusal-retry.js   拒绝重试（2.3.25+）
+  continue-retry.js  自动续与失败重试
+  armor-scorer.mjs   拒绝检测器（58 中文标记 + 22 英文正则）
+  redteam/           演练台，19 个模块
+presets/
+  redteam/           红队指挥预设
+  unrestricted/      无限制模式（2.3.17+）
+test/                20 个测试文件 / 150 个用例
+client.js            侧栏（React，预构建）
+cordis.patch.yml     profile 层的补丁声明
+```
 
-运行时文件在 `$DSH_HOME`：`prompt-inject.md`、`rules/`、`redteam/`。未设 `DSH_HOME` 时，优先用 dsh 安装目录旁边的 `.dsh`，再退回 `~/.dsh`。Web 和桌面端各用自己那一份主目录。
+运行时文件在 `$DSH_HOME`：`prompt-inject.md`、`rules/`、`redteam/`、`dsh-purge/`（含 `probe.json`、`refusal-retry.json`、`refusal-retry.log`、`continue-retry.json`）。
+
+未设 `DSH_HOME` 时，优先用 dsh 安装目录旁边的 `.dsh`，再退回 `~/.dsh`。Web 和桌面端各用自己那一份主目录。
 
 ---
 
@@ -481,42 +355,98 @@ dsh-purge --edit
 /preflight             # 补丁预检（只读）：apply 前先说清锚点漂移
 /trace [轮数]          # 破甲时间线：按轮聚合，看破甲在哪一层丢
 
-# 其它插件已占 /rewind（或 /purge、/rules、/skills）时，这条命令会跳过或改挂
-# /purge-rewind 等备用名；主插件其余命令、工具、/dsh-purge/* 路由不受影响。
-
 # 模型工具
 purge_status   purge_apply   purge_revert   purge_audit
 purge_verify   purge_preflight   purge_trace
 ```
 
-### 第四层：观测 / observability（v2.3.0）
+### HTTP 路由
 
-破甲有四个层：**提示词层**（身份与范围重写）、**引擎层**（82 条字节补丁改宿主默认值）、**门禁层**（区域/外挂/靶场判定恒放行）、**观测层**。前三层本插件早已做完，第四层是缺口。
+| 路由 | 说明 |
+| --- | --- |
+| `GET /dsh-purge/status` | 补丁状态、面板计数、冲突检测 |
+| `GET /dsh-purge/audit` | 全破自检（源码层 11 项） |
+| `GET/POST /dsh-purge/probe` | 注入探针：`POST` 造 nonce，`GET` 读结论，`DELETE` 清掉 |
+| `GET/POST /dsh-purge/retry` | 拒绝重试开关：`{"refusalRetry":true,"refusalMax":3}` |
 
-缺口的代价是静默失效。`purge_audit` 读的是插件自己的源码、grep 自己写的字符串——它证明「我的代码长得像破甲」，但不能回答「这一刻模型真的被破了」。四重 fallback 一起塌、assemble 钩子晚挂一拍、切预设后代理换掉、注入被 token 预算切掉尾部，这些情况下补丁全在、标记全对，模型收到的却是空注入或被裁过的版本。
+---
 
-三个只读工具补这一层，都不改宿主任何文件：
+## 新增模块详解
 
-`purge_verify` 读飞行记录仪（挂在真实装配路径上，环形保留最近 64 轮），按三条独立判据给出 `live` / `degraded` / `dead` 和 0–100 健康度：注入体量是否低于 512 B（四重 fallback 全塌）、装配后首段是否仍是 `dsh-purge`（宿主把自己的段插到前面）、闭合标签 `</project_instructions>` 之后是否还有内容（注入段被包住）。同时报注入来源分层——`refresh` 才叫健康，全落在 `sealed` 说明磁盘与内存钉子都没供上。
+### 注入探针（probe，2.3.29+）
 
-`purge_preflight` 在 apply 之前跑一遍只读状态，把 82 条补丁分进「已就位 / 待写入 / 锚点失配 / 不适用 / 文件缺失」，并按层分组。**锚点失配是宿主升级导致的真漂移**——改配置无效，只能补新锚点或等插件更新。原来这件事要「点了应用、重启、发现没生效」才知道。
+**解决的问题**：补丁写进磁盘、section 注册成功，只证明**宿主侧就绪**。真正的链路是 磁盘 → 装配 → 模型收到，中间任何一环断了，界面看起来都正常。
 
-`purge_trace` 把一直开着的内部探针日志（`assemble.entry` / `inject.read` / `assemble.rewrite` / `host.hungFn`）按轮聚合，标出空注入轮、首段丢失轮、下游抛错轮，回答「破甲是在哪一层丢的」，不必再靠人 `tail -F` + grep。
+```sh
+# 1. 造探针（30 分钟 TTL）
+curl -X POST http://127.0.0.1:PORT/dsh-purge/probe
+# → {"nonce":"purge-a1b2c3d4","ttlMs":1800000}
 
-`purge_audit` 相应拆成两段结论：**源码层**（原有 11 项，决定 100% 是否达成）与**运行时层**（来自飞行记录仪与时间线，单独给结论）。运行时层刻意不计入 `full_break`——新装插件还没跑过一轮时必然无数据，那种情况不该把 100% 判红。
+# 2. 新建会话随便说一句话
 
+# 3. 查结论（不问模型，直接读会话日志）
+curl http://127.0.0.1:PORT/dsh-purge/probe
+# → {"active":true,"injected":true,
+#    "injection":{"reason":"newest-session-carries-probe",
+#                 "sessions":[{"system_bytes":25823,"has_probe_tag":true,"has_nonce":true}]}}
+```
 
-设置页「应用」成功后会自动重启，以加载已改的包文件；也可手动点「重启」。补丁标题下有正式版和测试版。测试版跟 `beta` 分支。点「切换到正式版」会装回 master，并清掉钉选。正式版里选旧版本会固定在该版本，要回到最新再点「更新」。旧的测试标签不再列出。
+**四类结论都可操作**：
 
-输入框旁的「回退一次」和「回退上一轮」都留在当前这条对话里，不另开分支。已发送的那句会回到输入框，这一轮已经发出的内容和已完成的任务会从当前对话撤掉，改字后**重新发送**即可。从 **1.1.61** 起，多轮对话后回退按**当前这一轮**定位，不会又退到第一条用户消息。聊天里 `/rewind` 同样可用。
+```
+newest-session-carries-probe     ✅ 全通
+probe-section-missing            section 没注册
+nonce-mismatch                   探针在装配之后重建过，需要再发一次
+no-sessions                      还没有会话
+```
 
-**极简 / PTC 与标准不一致时**：同一任务在标准模式能跑、在极简或 PTC 被拦，通常是 preset 里 `run_code` 或 plan 拦截句没洗净，或内置 minimal 缺少 `agent-instructions`。请升到 **1.1.61+**，**完全退出宿主 → 清洗里应用 → 自动重启 → 新开一轮对话** 再试；只换 preset 不重应用，旧进程里的补丁不会更新。
+判据是**读 `~/.dsh/sessions/**/*.zstd` 里的 system prompt**，不看模型配不配合。实测有探针 `sys=25823`、没有 `sys=25714`，差 109 字符正好是那段。
 
-### 响应速度
+### 拒绝重试（refusal-retry，2.3.25+）
 
-DSH 会按顺序执行同一批中的 Bash 调用。旧版 dsh-purge 把默认前台等待从 60 秒提高到了 10 分钟，一条慢命令会让后续调用一起等待。补丁 #21 现在把带插件标记的旧值恢复为官方的 60 秒。无标记的等待时间和其他自定义值会保留；无标记的 10 分钟无法可靠地区分是插件旧值还是用户设置。
+模型开始推脱时自动追加一句 nudge 让它重新回答。默认**关闭**。
 
-在 macOS/Linux 的 `dsh web` 中，如需更快返回工具结果，可在 `$DSH_HOME/profiles/web/cordis.patch.yml`（通常是 `~/.dsh/profiles/web/cordis.patch.yml`）添加下面的条目。已有相同 id 时修改原条目，不要重复添加。这个 profile 覆盖层在内置配置之后加载，后续应用插件会保留它。
+```sh
+# 打开
+curl -X POST http://127.0.0.1:PORT/dsh-purge/retry \
+  -H 'content-type: application/json' \
+  -d '{"refusalRetry":true,"refusalDecompose":true,"refusalMax":3}'
+```
+
+**与上游社区版的差异**：他们包在 `llm/stream` waterfall 上，缓冲开头 → 判定拒绝 → 丢弃 → 重跑，用户只看得到最终结果。**DSH 0.2.2 没有 `llm/stream` waterfall**，`agent/pre-step` 的 `{kind:"reject"}` 也只结束本轮、不能重试。所以本版走 `agent.followup(nudge)`：代价是用户会看到多一轮，收益是机制成熟。
+
+**三段 nudge**：
+
+```
+第 1 次  RETRY_NUDGE      直接要技术答案，以「要现在执行吗？」结尾
+第 2 次  FRAME_NUDGE      换虚构框架（本地夹具 + 角色第一人称）
+第 3 次  DECOMPOSE_NUDGE  只要最小可交付组件（可选）
+```
+
+**检测器**：17 条规则，含中文**对象后置句式**（「这条我不做」「这份我不出」「结论：这条我不做」）。长技术回答里出现「提示词注入」不算拒绝。
+
+**双层预算**：同一 seq 不重复重试 + 跨 reset 的累计上限（默认 12），防止模型反复拒绝时无限重试。
+
+### 原子写入（2.3.28+）
+
+```js
+atomicWriteSync(fp, content, "utf8", { mode: 0o600, durable: true })
+atomicCopyFile(src, dst)   // 权限跟着源文件走
+```
+
+三处改进：
+
+- **复制保留源权限**：`0600` 的私有配置不会被 umask 放宽成 `0644`，`0755` 的启动器不丢执行位。
+- **rename 退避重试**：Windows 上目标被面板轮询/杀软短暂打开时的 `EPERM`/`EACCES`/`EBUSY` 重试 5 次，间隔 50/100/150/200 ms。
+- **临时名用 UUID**：并发写同一目标不撞名；失败时清理临时文件。
+
+---
+
+## 响应速度
+
+DSH 会按顺序执行同一批中的 Bash 调用。旧版把默认前台等待从 60 秒提高到 10 分钟，一条慢命令会让后续调用一起等待。补丁 #21 现在把带插件标记的旧值恢复为官方的 60 秒。
+
+在 macOS/Linux 的 `dsh web` 中，如需更快返回工具结果，可在 `$DSH_HOME/profiles/web/cordis.patch.yml` 添加：
 
 ```yaml
 - id: bash-sandbox
@@ -524,9 +454,9 @@ DSH 会按顺序执行同一批中的 Bash 调用。旧版 dsh-purge 把默认�
     timeoutMs: 10000
 ```
 
-使用标准 jobs 服务且 `promoteOnTimeout: true` 时，未完成的命令会在 10 秒后返回后台任务 id，并继续运行。用 `job_output` 读取结果、用 `job_kill` 停止。这个设置缩短前台等待，不会让命令本身跑得更快。没有 jobs 服务或关闭自动转后台时，超时会终止命令。单次调用传入的 `timeoutMs` 优先于这里的默认值；`run_in_background: true` 可立即返回任务 id。
+使用标准 jobs 服务且 `promoteOnTimeout: true` 时，未完成的命令会在 10 秒后返回后台任务 id。用 `job_output` 读取结果、用 `job_kill` 停止。
 
-日常任务还可以选择让新会话默认使用 Low 推理：
+日常任务还可以让新会话默认使用 Low 推理：
 
 ```yaml
 - id: agent-default-model
@@ -536,22 +466,22 @@ DSH 会按顺序执行同一批中的 Bash 调用。旧版 dsh-purge 把默认�
     reasoningEffort: low
 ```
 
-重启 `dsh web` 后加载配置。模型和推理等级默认值只用于新建会话，已有会话请在输入框中选择 Low。插件不会自动修改这些模型偏好。需要深入推理的任务可保留 High；搜索文件时应限定目录，避免递归扫描所有应用目录。
-
-### 本地靶场
-
-开源版攻击任务默认全拦，只放行本机/私网 IP。域名先解析再判，不认 `.lab` / `.htb` 这类后缀本身。hosts 把实验室名指到公网 IP 也会拦。在对话里说「这是我的服务器」不会放行。
-
 ---
 
 ## 本地校验
 
 ```sh
+# 语法
 node --check lib/index.js
 node --check lib/core.js
-node --check lib/rewind.js
-node --check lib/skills.js
-node --check client.js
+node --check lib/probe.js
+node --check lib/refusal-retry.js
+
+# 全量测试（150 个用例）
+node --test
+
+# 面板状态（宿主跑着的时候）
+curl http://127.0.0.1:PORT/dsh-purge/status
 ```
 
 ---
@@ -570,18 +500,7 @@ flowchart TD
   F --> G["注入插件加密默认（提示词框默认显示的那份）"]
 ```
 
-
-
-每次会话的覆盖：
-
-```mermaid
-flowchart TD
-  A["重启或新会话"] --> B["注入插件加密默认，不必点保存，不读宿主磁盘"]
-```
-
-
-
-每一轮的提示词注入与规则集决策。左边三个输入就是你在 dsh-purge 面板里控制的东西，虚线表示它们各自驱动哪一步判定：
+每轮的提示词注入与规则集决策：
 
 ```mermaid
 flowchart TD
@@ -610,8 +529,6 @@ flowchart TD
   P -.-> G
 ```
 
-
-
 ---
 
 ## 还原
@@ -621,6 +538,7 @@ flowchart TD
 - `prompt-inject.md` 是用户文件，还原时保留。
 - 「卸载」会先还原（若已应用），再删除注入文件、规则库和插件本身。
 - 重复应用是幂等的。
+- **agent preset 不参与还原**（2.3.23）：`$DSH_HOME/.agent-presets/` 下的文件是我们自己的配置，还原时保留原样。
 
 ---
 
@@ -644,15 +562,37 @@ flowchart TD
 
 ## 更新
 
-作者个人频道：[t.me/LLM_PoJia](https://t.me/LLM_PoJia)。有话、有更新会发在那里。GitHub [Releases](https://github.com/YuJunZhiXue/dsh-purge/releases) 仍可下历史包。原版不允许倒卖；二开必须署名。
+本仓库的更新与版本说明见 [release-notes.md](./release-notes.md)（2.3.17 起逐版记录）与 [GitHub Releases](https://github.com/L1daye/dsh-purge/releases)。
 
-## 说明
+原作者的频道与仓库：[t.me/LLM_PoJia](https://t.me/LLM_PoJia) · [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge)。
 
-- 改动范围是本机 `@deepseek-ai/*` 包里的渲染文案、默认策略和执行逻辑，以及用户目录下的覆盖文件与规则集。
-- 升级后原文对不上会显示跳过，这次应用仍算完成，不会乱改。
-- 不改动非 `@deepseek-ai` 的第三方插件源仓库（启动时的 CMD 无感会**尽力**修补已装的 doctor / market / 梁神 / mnemon，属运行时补丁）。
-- 安装走 GitHub 压缩包（npm 仓库没有这个名字，也不要走插件市场）。有 `dsh`：`dsh plugin --profile web add https://codeload.github.com/YuJunZhiXue/dsh-purge/tar.gz/refs/heads/master`。只有 pnpm：在 `$DSH_HOME/profiles/web` 里 `pnpm add` 同一地址。桌面把 `web` 换成 `desktop`。当前目录已是本仓库时 `add .`。
+原版不允许倒卖；二开必须署名。
+
+---
+
+## 开发文档
+
+改这个仓库之前先读 **[AGENTS.md](./AGENTS.md)** ——34573 B，含：
+
+- 架构与文件布局
+- 补丁怎么写（四条硬约束）
+- 五层验证方法
+- **20 条已知陷阱**（每一条都是真踩过的，含症状/根因/修法/实测数据）
+- 发布流程与两条安装路线
+- 行为测试探针设计
+
+**20 条陷阱里最值钱的几条**：
+
+| 陷阱 | 一句话 |
+| --- | --- |
+| #16 | `agent/status` 的 payload 里**没有 agent** —— 监听写了也不执行 |
+| #17 | 重试计数器被 reset 清零 → **无限重试** |
+| #18 | `addPromptSection` 放在提前 `return` 之后 → 整段静默失效 |
+| #19 | 「模型回显」不能当作注入验证的判据 |
+| #20 | 会话文件大小上限造成**假阴性** |
 
 ---
 
 感谢 [LINUX DO](https://linux.do) 社区
+
+以及原作者 [@YuJunZhiXue](https://github.com/YuJunZhiXue) —— 没有原版就没有这个版本。
