@@ -43,7 +43,7 @@ Everything below is **removal of gates plus new capability** — no upstream fea
 
 ---
 
-## Full-unrestricted build (dsh-purge-fullbreak)
+## About dsh-purge-nolimit
 
 This is **dsh-purge full-unrestricted 2.3.32-fullbreak**, built on upstream 1.1.82 and iterated since. Relative to the original:
 
@@ -84,27 +84,11 @@ This is **dsh-purge full-unrestricted 2.3.32-fullbreak**, built on upstream 1.1.
 
 ---
 
-## A note from the original author
-
-*(Kept verbatim from upstream. Two of its rules — "no public networks" and "no game cheats" — apply to the **open-source original**, not to this full-unrestricted fork. See the section above. The no-resale and attribution rules apply here fully.)*
-
-Someone took this open-source project and openly sold it. The author was later contacted about it — the details do not need writing down; draw your own conclusions.
-
-From now on, **public networks are off limits**. In the open-source build, attack tasks only accept **local range IPs**: loopback and RFC1918. Domains are resolved first (hosts included), and every resolved address must be private or loopback; hosts entries pointing a `.lab` name at a public IP, resolution failures, or mixed public addresses are all blocked. If it is not a local range, do not run it — it will not get through anyway. **Making game cheats is forbidden** (aimbot, wallhack, memory editing, anti-cheat bypass); both the prompt and the session gate block it. The open-source build ships no skill library and no knowledge base.
-
-**The original may not be resold.** Charging for it, or listing it as goods in a group, is not allowed. Forks are fine, but **attribution is mandatory**, naming the source repository: [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge). No attribution, concealed origin, or rebranding it as your own, and the author treats you as an adversary.
-
-The author's channel: [t.me/LLM_PoJia](https://t.me/LLM_PoJia).
-
----
-
 ## Contents
 
 - [A fork — attribution first](#a-fork--attribution-first)
-- [Full-unrestricted build](#full-unrestricted-build-dsh-purge-fullbreak)
-- [A note from the original author](#a-note-from-the-original-author)
+- [About this build](#about-dsh-purge-nolimit)
 - [What this is](#what-this-is)
-- [Attribution required](#attribution-required)
 - [License](#license)
 - [Supported hosts](#supported-hosts)
 - [Install](#install)
@@ -141,16 +125,6 @@ No hardcoded drive letters. Resolution order is `$DSH_HOME`, then `.dsh` next to
 This plugin only touches the official `@deepseek-ai` packages and local configuration already installed on the user's machine.
 
 ---
-
-## Attribution required
-
-**The original may not be resold.** No paid resale, no rebranded listings, no selling it as goods.
-
-**Forks must attribute**, naming the source repository: [YuJunZhiXue/dsh-purge](https://github.com/YuJunZhiXue/dsh-purge). Borrowing the original's name, ideas, code or prompts requires the same attribution.
-
-No attribution, concealed origin, rebranding, or reselling the original will be pursued legally by the original author.
-
-**This repository's attribution**: see [A fork — attribution first](#a-fork--attribution-first).
 
 ## License
 

@@ -913,7 +913,7 @@ while (from >= 0 && guard < 50) { ... from = text.lastIndexOf('"system/message"'
 ### 5.2 打包
 
 ```bash
-tar -czf dsh-purge-2.3.19-dsh022.tar.gz -C _v231test .
+tar -czf dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C dsh-purge-nolimit .
 ```
 
 **包内必须包含**：`lib/`、`client.js`、`presets/`、`scripts/`、`cordis.patch.yml`。
@@ -926,7 +926,7 @@ tar -czf dsh-purge-2.3.19-dsh022.tar.gz -C _v231test .
 **路线 A：`dsh plugin add`（本机，能用）**
 
 ```bash
-dsh plugin --profile desktop add file:C:/Users/me/.dsh/packages/dsh-purge-2.3.19-dsh022.tar.gz
+dsh plugin --profile desktop add file:C:/Users/me/.dsh/packages/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
 ```
 
 自动更新 `package.json` + 三份 lockfile + `node_modules`。
@@ -1000,13 +1000,13 @@ Start-ScheduledTask -TaskName "xxx"
 
 ```
 E:\test\                         工作区
-  _v231test\                     源码（改这里）
+  dsh-purge-nolimit\             源码（改这里）
   dsh-purge-<ver>-archive\       归档（每次里程碑）
     dist\                        打好的包
     src\                         源码快照
     skills\                      23 个红队技能
     scripts\                     验证脚本
-  dsh-purge-<ver>-dsh022.tar.gz  发布包
+  dsh-purge-nolimit-<ver>-dsh022.tar.gz  发布包
   redteam-tools-20.tar.gz        20 个工具 + 模板
   verify-preset.cjs              会话日志验证
 ```
