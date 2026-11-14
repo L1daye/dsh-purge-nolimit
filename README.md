@@ -7,7 +7,7 @@
 <p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
 <p align="center">
-  <em>DeepSeek Harness full jailbreak: no range gate, no cheat blocking, no approval popups. Jailbreak for every model — full-unrestricted build.</em>
+  <em>DeepSeek Harness, unrestricted: no range gate, no cheat blocking, no approval popups. Jailbreak for every model — dsh-purge-nolimit.</em>
 </p>
 
 <p align="center">
@@ -45,7 +45,7 @@ Everything below is **removal of gates plus new capability** — no upstream fea
 
 ## About dsh-purge-nolimit
 
-This is **dsh-purge full-unrestricted 2.3.32-fullbreak**, built on upstream 1.1.82 and iterated since. Relative to the original:
+This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.32). It starts from upstream dsh-purge 1.1.82, removes every session gate and approval dialog, and has been iterated on since. Relative to the original:
 
 - Public / private / domain targets are all allowed; no IP-range gate.
 - Game cheats, memory modification, injection and anti-cheat bypass are allowed.

@@ -7,7 +7,7 @@
 <p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
 <p align="center">
-  <em>DeepSeek Harness 完全解除：レンジ制限なし、チート遮断なし、承認ダイアログなし。Jailbreak for every model — full-unrestricted build.</em>
+  <em>DeepSeek Harness 無制限解除：レンジ制限なし、チート遮断なし、承認ダイアログなし。Jailbreak for every model — dsh-purge-nolimit.</em>
 </p>
 
 <p align="center">
@@ -45,7 +45,7 @@
 
 ## dsh-purge-nolimit について
 
-本リポジトリは **dsh-purge 完全解除版 2.3.32-fullbreak** で、原版 1.1.82 を基にすべてのセッションゲートと承認ダイアログを撤廃し、実用機能を継続的に追加しています：
+本リポジトリは **dsh-purge の無制限版 dsh-purge-nolimit**（2.3.32）です。原版 dsh-purge 1.1.82 を基に、すべてのセッションゲートと承認ダイアログを撤廃し、実用機能を継続的に追加しています：
 
 - 公開 / プライベート / ドメインのターゲットをすべて許可。IP レンジ判定を行いません。
 - ゲームチート、メモリ改変、インジェクション、アンチチート回避をすべて許可。

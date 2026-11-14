@@ -7,7 +7,7 @@
 <p align="center"><strong>Version 2.3.32-dsh022</strong></p>
 
 <p align="center">
-  <em>DeepSeek Harness 全量破甲：无靶场限制、无外挂拦截、无授权弹窗。Jailbreak for every model — full-unrestricted build.</em>
+  <em>DeepSeek Harness 无限制破甲：无靶场限制、无外挂拦截、无授权弹窗。Jailbreak for every model — dsh-purge-nolimit.</em>
 </p>
 
 <p align="center">
@@ -45,7 +45,7 @@
 
 ## dsh-purge-nolimit 插件说明
 
-本仓库是 **dsh-purge 全量破甲版 2.3.32-fullbreak**，在原版 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
+本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.32），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
 
 - 公网 / 私网 / 域名目标全部放行，不再做 IP 范围拦截。
 - 游戏外挂、内存修改、注入、反作弊请求全部放行。
