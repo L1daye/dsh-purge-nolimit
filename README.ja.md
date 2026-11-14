@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="dsh-purge-nolimit" width="720">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/banner-dark.svg">
+    <img src="docs/banner.svg" alt="dsh-purge-nolimit" width="100%">
+  </picture>
 </p>
 
 <h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge-nolimit）</h1>

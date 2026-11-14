@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="280" viewBox="0 0 1280 280">
+  <defs>
+    <!-- deep, toned base: not black, two-tone so it never looks flat -->
+    <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#29221c"/>
+      <stop offset="42%"  stop-color="#1a2029"/>
+      <stop offset="76%"  stop-color="#1c2230"/>
+      <stop offset="100%" stop-color="#1e1f2b"/>
+    </linearGradient>
+
+    <!-- muted blooms for the dark ground -->
+    <radialGradient id="b1" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#6e5a3a" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#6e5a3a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#7a5c42" stop-opacity="0.36"/>
+      <stop offset="100%" stop-color="#7a5c42" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b3" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#5c4a32" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#5c4a32" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b4" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#4a5a44" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#4a5a44" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="brush" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#9a7a4f"/>
+      <stop offset="50%"  stop-color="#8a6a5a"/>
+      <stop offset="100%" stop-color="#6a7a5a"/>
+    </linearGradient>
+
+    <!-- very faint grain so the gradients do not band -->
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.035"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="overlay"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="280" fill="url(#canvas)"/>
+
+  <!-- scattered light, keep it low and wide -->
+  <circle cx="1050" cy="40"  r="250" fill="url(#b1)"/>
+  <circle cx="1250" cy="240" r="230" fill="url(#b2)"/>
+  <circle cx="140"  cy="265" r="235" fill="url(#b3)"/>
+  <circle cx="820"  cy="300" r="215" fill="url(#b4)"/>
+  <circle cx="470"  cy="-50" r="210" fill="url(#b1)" opacity="0.55"/>
+
+  <rect width="1280" height="280" fill="transparent" filter="url(#grain)"/>
+
+  <!-- title -->
+  <text x="112" y="150"
+        font-family="'Product Sans','Google Sans','Segoe UI',system-ui,-apple-system,sans-serif"
+        font-size="72" font-weight="500" fill="#f2ece2"
+        letter-spacing="-2">dsh-purge-<tspan fill="#c0a880">nolimit</tspan></text>
+
+  <!-- supporting line -->
+  <text x="115" y="196"
+        font-family="'Segoe UI',system-ui,-apple-system,sans-serif"
+        font-size="21" font-weight="400" fill="#9c9080"
+        letter-spacing="0.3">DeepSeek Harness · unrestricted build · v2.3.32</text>
+
+  <!-- tonal bar -->
+  <rect x="0" y="276" width="1280" height="4" fill="url(#brush)"/>
+</svg>

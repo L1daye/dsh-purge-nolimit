@@ -1,18 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="280" viewBox="0 0 1280 280">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a1a2e"/>
-      <stop offset="55%" stop-color="#16213e"/>
-      <stop offset="100%" stop-color="#0f3460"/>
+    <!-- light wheat: aged paper, warm, not white -->
+    <linearGradient id="canvas" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"   stop-color="#f7f2e9"/>
+      <stop offset="40%"  stop-color="#f2eee4"/>
+      <stop offset="74%"  stop-color="#eeeae2"/>
+      <stop offset="100%" stop-color="#f0e9dd"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#2f81f7"/>
-      <stop offset="100%" stop-color="#a78bfa"/>
+
+    <radialGradient id="b1" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#d8c49a" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#d8c49a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#d9b9a0" stop-opacity="0.48"/>
+      <stop offset="100%" stop-color="#d9b9a0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b3" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#c4c9a8" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#c4c9a8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="b4" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"   stop-color="#cdbfa8" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#cdbfa8" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="brush" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#c9a86f"/>
+      <stop offset="50%"  stop-color="#b89a7e"/>
+      <stop offset="100%" stop-color="#a8a885"/>
     </linearGradient>
   </defs>
-  <rect width="720" height="180" fill="url(#bg)"/>
-  <rect x="0" y="176" width="720" height="4" fill="url(#accent)"/>
-  <text x="360" y="88" font-family="'Segoe UI', system-ui, sans-serif" font-size="40" font-weight="700" fill="#ffffff" text-anchor="middle">dsh-purge-nolimit</text>
-  <text x="360" y="126" font-family="'Segoe UI', system-ui, sans-serif" font-size="19" fill="#9fb3d8" text-anchor="middle">DeepSeek Harness 全量破甲</text>
-  <text x="360" y="156" font-family="'Segoe UI', system-ui, sans-serif" font-size="14" fill="#64748b" text-anchor="middle">88 patches · prompt injection · unrestricted preset</text>
+
+  <rect width="1280" height="280" fill="url(#canvas)"/>
+
+  <circle cx="1040" cy="46"  r="250" fill="url(#b1)"/>
+  <circle cx="1250" cy="240" r="235" fill="url(#b2)"/>
+  <circle cx="140"  cy="268" r="230" fill="url(#b3)"/>
+  <circle cx="820"  cy="300" r="215" fill="url(#b4)"/>
+  <circle cx="470"  cy="-50" r="205" fill="url(#b1)" opacity="0.6"/>
+
+  <text x="112" y="150"
+        font-family="'Product Sans','Google Sans','Segoe UI',system-ui,-apple-system,sans-serif"
+        font-size="72" font-weight="500" fill="#33291f"
+        letter-spacing="-2">dsh-purge-<tspan fill="#8a6f4c">nolimit</tspan></text>
+
+  <text x="115" y="196"
+        font-family="'Segoe UI',system-ui,-apple-system,sans-serif"
+        font-size="21" font-weight="400" fill="#6e6152"
+        letter-spacing="0.3">DeepSeek Harness · unrestricted build · v2.3.32</text>
+
+  <rect x="0" y="276" width="1280" height="4" fill="url(#brush)"/>
 </svg>
