@@ -1079,6 +1079,96 @@ F:\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd
 
 ---
 
+### 陷阱 23：`lib/` 里的脚本入口没有 main-guard → import 就等于执行
+
+**症状**：任何「枚举 `lib/*.js` 逐个 import」的工具（自检、探针、未来的重构）
+会突然全量回滚重建宿主，然后进程被 `process.exit` 干掉。
+
+**实测**：2.3.37 的远程探针在第 1 段（模块加载）就被打断，只留下一行
+
+```
+{"ok":true,"error":"","version":"2.3.37-dsh022","reverted":55,"applied":72,...}
+```
+
+那是 `lib/reapply-cli.js` 的顶层代码在 import 时跑完了整趟 revert + reapply。
+
+**原因**：`lib/` 里有四个文件本质是脚本，但名字和位置都像库：
+
+| 文件 | import 时会做什么 |
+| --- | --- |
+| `reapply-cli.js` | revert 全部宿主文件 + 重新打补丁 + `process.exit` |
+| `restart-web.js` | `process.exit(1)` |
+| `restart-desktop.js` | `process.exit(1)` |
+| `uninstall-restart.js` | `process.exit(1)` |
+
+**修法**（2.3.38）：
+
+```js
+// reapply-cli.js：只有被当作脚本直接执行时才跑
+import { pathToFileURL } from "node:url";
+const invokedDirectly = (() => {
+  try { return import.meta.url === pathToFileURL(process.argv[1] || "").href; }
+  catch { return false; }
+})();
+if (invokedDirectly) { /* 真正的逻辑 */ }
+```
+
+另外三个把顶层的 `process.exit(1)` 换成可捕获的错误：
+
+```js
+if (!encoded) {
+  throw new Error("[dsh-purge] 这是脚本入口（需要 DSH_PURGE_RESTART 环境变量），不要 import 它");
+}
+```
+
+被 spawn 时退出码一样是非零，只是多了可读信息；被 import 时调用方可以 catch。
+
+**锁住它的测试**：`test/entry-scripts.test.mjs` 把 `process.exit` 换成抛错，
+逐个 import 这四个文件，断言「没调用 exit」+「reapply-cli 是纯粹的空操作」+
+「其余三个抛的是带说明的错误」，并且扫源码确认**没有任何 `import` 语句指向它们**
+（它们只能作为子进程脚本路径被 spawn）。
+
+**教训**：**「这个文件是库还是脚本」必须写在代码里，不能靠命名和目录位置暗示。**
+任何 `lib/` 里带顶层副作用的文件，都是等着被 introspection 工具引爆的地雷。
+
+---
+
+### 陷阱 24：系统 node 和宿主运行时不是同一个 Node
+
+**症状**：同一份代码，命令行跑工具报一堆错，应用内却完全正常。
+
+**实测**：远程系统 `node` 是 **v20.14.0**，而宿主 Electron 44 自带 **Node 24.21.0**。
+redteam 资产库用 `node:sqlite`（Node 22.5+），于是：
+
+```
+系统 node 跑：18 个 redteam 模块里 7 个 import 失败
+              Error [ERR_UNKNOWN_BUILTIN_MODULE]: No such built-in module: node:sqlite
+宿主运行时跑：全部正常，node:sqlite 可用
+```
+
+本机系统 node 是 v24.22.1，所以本机测不出来——**环境的差异把 bug 藏了**。
+
+**怎么用宿主运行时跑脚本**：
+
+```powershell
+$env:ELECTRON_RUN_AS_NODE = '1'
+# 注意：Electron 是 GUI 子系统程序，PowerShell 的 & 不会等它，
+# $LASTEXITCODE 会为空。要拿输出/退出码必须用 Start-Process -Wait。
+$p = Start-Process -FilePath 'F:\DeepSeek Harness\DeepSeek Harness.exe' `
+  -ArgumentList 'C:\path\to\script.cjs' `
+  -RedirectStandardOutput out.log -RedirectStandardError err.log -PassThru -Wait
+$p.ExitCode
+```
+
+**修法**（2.3.38）：`lib/redteam/sqlite.mjs` 作为 `node:sqlite` 的唯一加载点，
+缺的时候抛一句能行动的报错（需要什么版本、当前是什么运行时、该怎么跑）。
+`package.json` 的 `dshCompatibility.runtime` 也写清了这件事。
+
+**教训**：**「用系统 node 跑通了」不等于「宿主里能跑」。** 验证运行时相关的东西时，
+先确认 `process.versions.node`，别假设两者一致。
+
+---
+
 ## 5. 发布流程
 
 ### 5.1 改版本号

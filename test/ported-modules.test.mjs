@@ -93,6 +93,30 @@ test("layers: na 不计入分母（目标包没装不算缺陷）", () => {
   assert.equal(rolled.total, 0);
 });
 
+test("layers: 全 optional 的层，全打上要报 ok 而不是 na", () => {
+  const layer = BYPASS_LAYERS.find((l) => (l.optionalIds || []).length === l.ids.length);
+  assert.ok(layer, "需要至少一层全 optional");
+  const allApplied = {};
+  for (const id of layer.ids) allApplied[id] = "applied";
+  const rolled = rollupLayers(allApplied, ALL_PATCHES).find((l) => l.title === layer.title);
+  assert.equal(rolled.state, "ok", `${layer.title} 全打上应报 ok`);
+  assert.equal(rolled.optionalApplied, layer.ids.length);
+
+  // 一条都没打上 -> na（不能和"全打上了"混为一谈）
+  const none = rollupLayers({}, ALL_PATCHES).find((l) => l.title === layer.title);
+  assert.equal(none.state, "na");
+  assert.equal(none.optionalApplied, 0);
+  assert.equal(none.optionalMissing, layer.ids.length);
+});
+
+test("layers: 补丁全绿时没有任何一层卡在 na/pending/broken", () => {
+  const all = {};
+  for (const p of ALL_PATCHES) all[p.id] = "applied";
+  const rolled = rollupLayers(all, ALL_PATCHES);
+  const stuck = rolled.filter((l) => l.state !== "ok");
+  assert.deepEqual(stuck.map((l) => `${l.title}:${l.state}`), []);
+});
+
 test("layers: renderLayers 对非 ok 层给出待应用 id 与影响说明", () => {
   const rolled = [
     { title: "T", kind: "k", why: "因为这样", state: "pending", applied: 1, total: 2, optional: 0, pendingIds: ["62"], brokenIds: [], naIds: [] },

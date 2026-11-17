@@ -1,3 +1,92 @@
+# 2.3.38
+
+> 这一版是**在远程 rc.3 上跑全量探针跑出来的**，不是计划内的工作。
+> 探针本身在第一段就被自己撞出的 bug 打断了——`import` 一个文件就触发了
+> 全量 revert + reapply 并 `process.exit`。
+
+## 中文
+
+### 修掉的三个真 bug
+
+- **`lib/reapply-cli.js` 没有 main-guard**。它是 177 字节的纯顶层代码：
+  `revert 全部宿主文件 → 重新打一遍补丁 → process.exit`。它躺在 `lib/` 里、
+  名字也不带 `.cli`，于是任何「枚举 lib/*.js 逐个 import」的工具都会在 import
+  阶段悄悄做一次全量回滚重建并把进程杀掉。远程探针实测：`reverted:55 applied:72`。
+  改成只有被当作脚本直接执行时才跑。
+
+- **另外三个脚本入口会杀掉 import 它们的进程**。`restart-web.js` /
+  `restart-desktop.js` / `uninstall-restart.js` 都在顶层 `process.exit(1)`。
+  改成抛可捕获、带说明的错误——作为子进程被 spawn 时退出码不变，但可诊断。
+
+- **`layers.js`：三个全 optional 的层永远到不了 `ok`**，而且更糟的是
+  「可选但没打上」被算成了「可选且已打上」。于是面板在补丁全绿时仍把
+  「上下文保护 / Hooks 否决 / 桌面启动兜底」三层显示为未生效。
+  拆成 `optionalApplied` / `optionalMissing` 两个计数，全打上才 `ok`。
+  修完 `rollupLayers(allApplied)` 从 35 ok 变成 **38 ok**。
+
+### 修掉的一个可诊断性问题
+
+- **redteam 的 `node:sqlite` 依赖缺了只报一行天书**。远程系统 node 是 v20.14.0，
+  18 个 redteam 模块里 7 个直接
+  `No such built-in module: node:sqlite`。而宿主 Electron 44 自带 **Node 24.21.0**，
+  同一份代码在应用内完全正常。新增 `lib/redteam/sqlite.mjs` 作为唯一加载点，
+  错误信息现在会说明：需要 Node 22.5+、当前是什么运行时、改怎么跑。
+
+- `package.json` 增加 `dshCompatibility.runtime`，写清宿主运行时与系统 node 的差别。
+  **`scripts/selfcheck.mjs` 和 `bin/dsh-purge.js` 用系统 node 跑时，运行时和宿主不是同一个**
+  ——redteam 相关结论必须以宿主运行时为准。
+
+### 测试
+
+197 条（+9）：新增 `test/entry-scripts.test.mjs`（5 条，锁「脚本入口 import 无副作用」）
+与 `test/redteam-sqlite.test.mjs`（4 条，锁「唯一加载点 + 报错可行动」），
+`ported-modules.test.mjs` 加 2 条锁分层全 optional 的语义。
+
+### 不是 bug（探针断言写严了）
+
+- `#40/#64/#65` 的 `pattern === replace` 是**故意的 marker 识别块**：
+  匹配「已经打过补丁的最终形态」再写回同样的文本，只为让 marker 判定成立。
+- `remove-tree` 导出的是 `removeTreeNoFollow`；`update-policy` 是
+  `preferences`/`savePreferences`；`listSnapshots` 返回对象不是数组。
+- `lib/redteam/client.js` 是浏览器包，import 时报 `window is not defined` 属正常。
+
+## English
+
+### Three real bugs, all found by the probe
+
+- **`lib/reapply-cli.js` had no main-guard.** 177 bytes of top-level code:
+  revert every host file, reapply every patch, `process.exit`. Living in `lib/`
+  under a name without `.cli`, any tool that enumerates and imports `lib/*.js`
+  rewrites the whole host and kills itself. The remote probe measured
+  `reverted:55 applied:72` before dying. Now it only runs as a script.
+
+- **Three more entry scripts killed their importer** via top-level `process.exit(1)`.
+  They now throw a catchable, explanatory error; the spawn path keeps the same exit code.
+
+- **`layers.js`: three fully-optional layers could never reach `ok`**, and a
+  curated-optional patch that was *not* applied was counted as if it were.
+  Split into `optionalApplied` / `optionalMissing`. `rollupLayers(allApplied)`
+  went from 35 ok to **38 ok**.
+
+### One diagnosability fix
+
+- **The redteam `node:sqlite` failure was unreadable.** The remote system node is
+  v20.14.0, so 7 of 18 redteam modules threw
+  `No such built-in module: node:sqlite` — while the host's Electron 44 ships
+  **Node 24.21.0** where the same code works. New `lib/redteam/sqlite.mjs` is the
+  single load point and the error now says what version is needed, what runtime
+  you are on, and how to run it correctly.
+
+- `dshCompatibility.runtime` documents that tooling run through the system node
+  is a *different runtime* from the host.
+
+### Tests
+
+197 (+9): `test/entry-scripts.test.mjs` (5), `test/redteam-sqlite.test.mjs` (4),
+plus 2 in `ported-modules.test.mjs` pinning the optional-layer semantics.
+
+---
+
 # 2.3.37
 
 > 一个包同时服务三个宿主版本。`dshTarget` 改回 **`0.2.2-rc.1`**（本机在用的版本），
