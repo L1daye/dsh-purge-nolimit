@@ -164,6 +164,32 @@ async function main() {
     bad.length ? "这些不是 na 也不是软跳过，是真漂移：补锚点或查 targetFiles key" : "");
   if (skippedSoft.length) rec("INFO", "patch.softSkipped", skippedSoft.join(" | "));
 
+  // ── 5b. 语义分层 ─────────────────────────────────────────────
+  try {
+    const L = await load("layers.js");
+    const coverage = L.checkLayerCoverage(core.ALL_PATCHES);
+    rec(coverage.ok ? "PASS" : "FAIL", "layer.coverage",
+      coverage.ok ? `${L.BYPASS_LAYERS.length} 层覆盖全部 ${core.ALL_PATCHES.length} 条` : `未分层: ${JSON.stringify(coverage.missing)} 幽灵: ${JSON.stringify(coverage.ghost)}`,
+      coverage.ok ? "" : "每条补丁必须落进某一层，否则会在面板上凭空消失");
+    if (st && Object.keys(st).length) {
+      const rolled = L.rollupLayers(st, core.ALL_PATCHES);
+      const tally = {};
+      for (const l of rolled) tally[l.state] = (tally[l.state] || 0) + 1;
+      const notOk = rolled.filter((l) => l.state !== "ok" && l.state !== "na");
+      rec(notOk.length ? "FAIL" : "PASS", "layer.state",
+        JSON.stringify(tally) + (notOk.length ? " -> " + notOk.map((l) => `${l.title}:${l.state}`).join(", ") : ""),
+        notOk.length ? "按层看哪个用户痛点没拆掉；pending 点一次应用，broken 要查锚点" : "");
+    }
+  } catch (e) { rec("WARN", "layer.state", `跳过：${e.message}`); }
+
+  // ── 5c. 重锚覆盖 ─────────────────────────────────────────────
+  try {
+    const A = await load("anchors.js");
+    const ov = A.readOverrides(dshHome);
+    const ids = Object.keys(ov || {});
+    rec("INFO", "anchors.overrides", ids.length ? `${ids.length} 条本地重锚：${ids.map((i) => "#" + i).join(",")}` : "无本地重锚（用出厂锚点）");
+  } catch (e) { rec("INFO", "anchors.overrides", `读不到：${e.message}`); }
+
   // ── 6. 幂等（内存比对，不落盘）──────────────────────────────
   if (aiBase) {
     try {

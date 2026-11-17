@@ -1,6 +1,6 @@
 {
   "name": "dsh-purge",
-  "version": "2.3.35-dsh022",
+  "version": "2.3.36-dsh022",
   "description": "DeepSeek Harness 全量破甲版：无靶场限制、无外挂拦截、无授权弹窗。88 条宿主补丁 + 提示词注入 + 无限制预设 + 拒绝重试 + 注入探针。Jailbreak for every model — full-unrestricted build.",
   "type": "module",
   "main": "lib/index.js",

@@ -23,26 +23,40 @@ dsh-purge 是 **DeepSeek Harness** 的插件。它做两件事：
 
 ```
 lib/
-  core.js              355 KB   补丁表 ALL_PATCHES + 应用引擎 + 状态采集 + targetFiles
-  index.js             126 KB   cordis 插件入口、HTTP 路由、systemPrompt waterfall
+  core.js              214 KB  应用引擎 + 状态采集 + targetFiles（补丁表已拆出）
+  patches/             补丁表模块（2.3.36 拆分，ALL_PATCHES 逐字节等价比对通过）
+    code.mjs                3 条   agent-loop / 消息流
+    engine.mjs              8 条   沙箱 / 审批 / 文件系统
+    new-tools.mjs          67 条   工具描述与 schema（最大的一块）
+    shared.mjs              —     new-tools 与 core 共用的两个字符串常量
+    index.mjs               —     模块入口与「新补丁该放哪」的指引
+  index.js             126 KB  cordis 插件入口、HTTP 路由、systemPrompt waterfall
   identity.js           41 KB   身份判定、preset 识别、注入正文改写
-  preset-default.js     ~6 KB   默认预设声明
-  net-scope.js          16 KB   网络作用域
-  verify.js             ~5 KB   运行时自检
-  armor-scorer.mjs     7.1 KB   拒绝检测器（58 中文标记 + 22 英文正则）
-  default-prompt-inject.{md,zh,en}   34426 B × 3，SHA256 EA61AE66…F58BA7E
+  layers.js             ~9 KB   38 层语义分组（哪层没达标 + 影响是什么）
+  verifiers.js          ~7 KB   语义验证器（#15/#16/#35/#62，绕开 marker 判定）
+  anchors.js            ~3 KB   本地重锚覆盖 anchor-overrides.json
+  diagnose.js           ~5 KB   锚点漂移诊断（候选行号）
+  windows-asar-handoff.js  15 KB  PowerShell 助手：等 Electron 完全退出再挪归档
+  macos-asar-handoff.js     9 KB
+  desktop-handoff.js        —    平台分派
+  update-*.js           12 个    更新系统（偏好/凭据分离、镜像、代理、状态机）
+  rollback-transaction.js / install-registry.js / remove-tree.js  快照回滚
+  atomic-files.js / path-boundary.js / maintenance-lock.js       原子写与边界
+  tuning.js / boost.js / steering.js / apply-gate.js             运行时开关
+  instance.js / host-layout.js / runtime-layout.js / next-host.js 实例与布局解析
+  preset-compat.js / preset-injection.js / presets-plugin.js …    preset 体系
+  armor-scorer.mjs      11.9 KB 拒绝检测器（58 中文标记 + 22 英文正则）
+  verify.js             13.4 KB 飞行记录仪
+  trace.js               9.1 KB 破甲时间线
+  preflight.js           6.9 KB 只读预检（purge_preflight）
+  native-tool-compat.js  8.9 KB DSML 正文工具调用守卫
+  prompt-snapshots.js    6.4 KB 提示词快照
   redteam/            1.06 MB   演练台，19 个模块
-    store-core.js      333 KB   SQLite 事实库
-    client.js          280 KB   客户端
-    tools.js           133 KB   redteam_* 工具定义
-    score-rules.js      62 KB   评分规则
-    preset-composition.js 16 KB preset 目录解析（自实现的 YAML 子集解析器）
-    index.js            27 KB   preset 注册入口
 presets/
   redteam/              28 KB   红队指挥预设
   unrestricted/         16 KB   无限制模式
 scripts/
-  verify-patches.ps1            四层验证
+  selfcheck.mjs                 部署后一条命令自检（Layer 0）
   verify-preset.cjs             preset 生效验证（解会话日志）
   check-runtime.ps1             宿主运行时自检
   redteam-setup.sh              红队工具链安装（Linux/VPS 侧）
@@ -200,6 +214,63 @@ patch_status: { "1": "applied", ..., "76": "skipped", "80": "skipped" }
 状态值只有五个：`applied` / `skipped` / `missing_file` / `na` / `failed`。
 
 **`skipped` 有两个原因**：`skipIfMarked` 命中（正常），或 pattern 不匹配（要查）。
+
+### Layer 2.5: 锚点漂移诊断与本地重锚
+
+宿主升级把锚点改坏时，不用改插件源码、也不用等发版：
+
+```bash
+dsh-purge --diagnose                       # 哪条/哪个文件/第几个 anchor，+ 候选行号
+dsh-purge --diagnose --json                # 机器读
+dsh-purge --reanchor 95 --index 1 --lines 990-1000          # 预览，不写盘
+dsh-purge --reanchor 95 --index 1 --lines 990-1000 --yes    # 落地
+dsh-purge --reanchor clear 95              # 撤销
+```
+
+覆盖存在 `$DSH_HOME/dsh-purge/anchor-overrides.json`（0600），
+`core.patchReplacements()` 每次都会叠上去，**删掉文件即恢复出厂锚点**。
+
+`--diagnose` 的判断方式：锚点在文件里找不到时，从锚点里挑一个辨识度最高的片段
+（反引号串 > 双引号串 > 标识符调用 > 赋值目标）去宿主文件里搜，报出行号与上下文。
+搜不到说明那段代码被上游整体删了，得改语义而不是重锚。
+
+### Layer 2.6: 语义验证与「全目标达标」
+
+`patchStatus` 的 `applied` 靠 marker，而 **marker 只能证明"这一处改过"**。
+#62 的事故就是：`pipeline.js` 里 `case "unavailable"` 命中了 marker，
+同一个文件的 `approval === void 0` / `exec.agent === void 0` 两个 deny 分支还在，
+却报 `applied`。配套 `skipIfMarked` 之后，重装也永远收敛不了。
+
+解法是两层，都在 `lib/verifiers.js`：
+
+```js
+export const VERIFIERS = { 15, 16, 35, 62 };          // 挂 verify(text, fp)
+export const REQUIRE_ALL_TARGETS = [15, 16, 35, 62];   // 所有目标文件都达标才算达标
+```
+
+- 有 `verify` 的补丁在 `filePatchSettled()` 里**完全绕开 marker**，由验证函数说了算；
+- 验证不过且没有残留锚点 → 报 `unmatched`（漂移），不再当"可选跳过"；
+- `requireAllTargets` 挡住"只改中一份就报 applied"。
+
+写新验证器时注意：判据要**限定在补丁自己改的那个方法体内**。
+#15 的 `bwrapProfileArgs()` 在文件里还有定义、还被 `runnerArgv()` 用，
+拿"文件里有没有这个串"当判据会误报——`confineBody()` 就是为此存在的。
+
+### Layer 2.7: 启动自动应用的降级
+
+`autoApplyOnStart: true` 在装完即用时很方便，但有一个致命场景：**官方客户端更新**
+会把一份新的 `resources/app.asar` 放回来，而我们解包的 `resources/app/` 还在原地。
+Electron 优先加载 asar → 自动应用写进 `app/` 的补丁全部空转，面板仍显示全绿。
+
+2.3.36 起，启动时检测到「asar 与 app/ 并存」就**不写盘**：
+
+```
+boot: official update detected (app.asar is back over resources/app)
+boot: patches stay PENDING - open the panel and press Apply, then restart
+```
+
+同时删掉 applied stamp（`markPendingAfterHostUpdate`），让面板如实显示 pending。
+用户点一次「应用」即走完整流程（解包新 asar → 挪走归档 → 打补丁）。
 
 ### Layer 3: 文件实际内容
 
@@ -1024,10 +1095,22 @@ F:\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd
 ### 5.2 打包
 
 ```bash
-tar -czf dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C dsh-purge-nolimit .
+# 用显式清单，不要用 --exclude。
+# GNU tar 的 --exclude 是未锚定的路径片段匹配：--exclude=patches 会连
+# lib/patches/ 一起排掉（2.3.36 踩过，装上去 lib/patches 缺失、core.js 直接导入失败）。
+tar -czf dsh-purge-nolimit-<ver>-dsh022.tar.gz -C dsh-purge-nolimit \
+  package.json client.js cordis.patch.yml lib bin presets docs scripts \
+  screenshots.json README.md README.zh-CN.md README.ja.md \
+  LICENSE LICENSE-COMMERCIAL.md NOTICE CHANGELOG.md AGENTS.md SECURITY.md .npmignore
 ```
 
-**包内必须包含**：`lib/`、`client.js`、`presets/`、`scripts/`、`cordis.patch.yml`。
+**包内必须包含**：`lib/`（含 `lib/patches/`）、`client.js`、`presets/`、`scripts/`、`cordis.patch.yml`。
+
+**打完必须验**：
+
+```bash
+tar -tzf out.tar.gz | grep -c '^lib/patches/'    # 必须是 5（目录 + 4 个 mjs）
+```
 
 **不能包含**：`lib/default-prompt-inject.md`（`files` 里用 `!` 排除，
 提示词走加密的 `asset-table.js` 通道）。

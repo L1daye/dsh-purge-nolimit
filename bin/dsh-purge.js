@@ -2,6 +2,8 @@
 
 import * as core from "../lib/core.js";
 import * as rules from "../lib/rules.js";
+import * as diagnose from "../lib/diagnose.js";
+import * as anchors from "../lib/anchors.js";
 
 const args = process.argv.slice(2);
 
@@ -35,8 +37,107 @@ function printStatus(state) {
   return out.join("\n");
 }
 
+// ── diagnose / reanchor ──────────────────────────────────────────────
+//
+// 宿主升级后锚点会漂移。`--diagnose` 说清楚哪条、哪个文件、第几个 anchor
+// 失配，并从锚点里挑一个辨识片段去宿主文件里搜出候选行号；
+// `--reanchor` 把用户确认的那段真实代码写成覆盖（不改插件源码）。
+
+async function runDiagnose(state, json) {
+  if (!state.ai_base) {
+    console.log("[ERROR] " + core.missingAiBaseMessage());
+    process.exit(1);
+  }
+  const fsmod = (await import("node:fs")).default;
+  // 只诊断**没打上**的补丁：已经 applied 的补丁锚点本来就该消失，
+  // 把它们也列出来只会把真漂移埋在噪声里。
+  // 可选补丁的 `skipped` 也要排掉——那是"前端 bundle 重新压缩、标记不再出现"这类
+  // 设计内的软跳过，不是需要重锚的漂移。
+  const status = await core.patchStatus(state.ai_base, core.ALL_PATCHES);
+  const pending = core.ALL_PATCHES.filter((p) => {
+    const s = status[p.id];
+    if (s === "applied" || s === "na") return false;
+    if (s === "skipped" && p.optional === true) return false;
+    return true;
+  });
+  const rows = diagnose.diagnoseAnchors(state.ai_base, pending, {
+    targetFiles: core.targetFiles,
+    readFileSafe: (fp) => {
+      try { return fsmod.readFileSync(fp, "utf8"); } catch { return null; }
+    },
+    patchReplacements: core.patchReplacements,
+    matchesPattern: core.matchesPattern,
+  });
+  if (json) {
+    console.log(JSON.stringify(rows, null, 2));
+    return;
+  }
+  console.log(diagnose.renderDiagnosis(rows));
+  if (rows.length) {
+    console.log("落地后用 --apply 应用，然后重启 dsh。覆盖存在：");
+    console.log("  " + anchors.OVERRIDES_FILE + "（删掉即恢复出厂锚点）");
+  }
+}
+
+async function runReanchor(state, argv) {
+  const rest = argv.slice(argv.indexOf("--reanchor") + 1).filter((a) => !a.startsWith("--"));
+  const flag = (name) => {
+    const i = argv.indexOf(name);
+    return i >= 0 ? argv[i + 1] : "";
+  };
+  const yes = argv.includes("--yes");
+
+  if (rest[0] === "clear") {
+    const id = rest[1];
+    if (!id) { console.log("用法: dsh-purge --reanchor clear <id>"); process.exit(2); }
+    anchors.clearOverride(state.dsh_home, id);
+    core.invalidateAnchorOverrides();
+    console.log(`✓ 已清除 #${id} 的本地重锚覆盖`);
+    return;
+  }
+
+  const id = rest[0];
+  const index = Number(flag("--index") || 0);
+  const lines = String(flag("--lines") || "");
+  if (!id) {
+    console.log(`用法:
+  dsh-purge --diagnose                                   查看漂移与候选行
+  dsh-purge --reanchor <id> --index <n> --lines A-B      预览（不写盘）
+  dsh-purge --reanchor <id> --index <n> --lines A-B --yes  落盘
+  dsh-purge --reanchor clear <id>                        撤销覆盖`);
+    process.exit(2);
+  }
+  const patch = core.ALL_PATCHES.find((p) => String(p.id) === String(id));
+  if (!patch) { console.log(`没有 #${id} 这条补丁`); process.exit(2); }
+  const keys = Array.isArray(patch.file) ? patch.file : [patch.file];
+  const files = core.targetFiles(state.ai_base);
+  const target = keys.flatMap((k) => {
+    const v = files[k];
+    return Array.isArray(v) ? v : v ? [v] : [];
+  })[0];
+  if (!target) { console.log(`#${id} 的目标文件在本机不存在`); process.exit(2); }
+  if (!/^\d+-\d+$/.test(lines)) { console.log("--lines 需要形如 120-138"); process.exit(2); }
+  const [a, b] = lines.split("-").map(Number);
+  const pattern = diagnose.extractLines(target, a, b);
+  if (!pattern.trim()) { console.log("取到的区间是空的"); process.exit(2); }
+
+  console.log(`#${id} ${patch.name}  anchor#${index}  ←  ${target}`);
+  console.log("--- 新锚点 ---");
+  console.log(pattern);
+  console.log("--------------");
+  if (!yes) {
+    console.log("预览模式，未写盘。确认无误加 --yes。");
+    return;
+  }
+  anchors.writeOverride(state.dsh_home, id, index, pattern, { host: patch.name });
+  core.invalidateAnchorOverrides();
+  console.log("✓ 已写入本地重锚覆盖。接着 --apply 应用，然后重启 dsh。");
+}
+
 async function main() {
-  const mode = args.find((a) => ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help"].includes(a));
+  const mode = args.find((a) =>
+    ["--apply", "--revert", "--uninstall", "--status", "--edit", "--help", "--diagnose", "--reanchor"].includes(a)
+  );
 
   if (mode === "--help" || args.includes("-h")) {
     console.log(`dsh-purge 用法:
@@ -45,6 +146,8 @@ async function main() {
   dsh-purge --revert     回滚还原
   dsh-purge --uninstall  卸载插件（已应用则先还原）
   dsh-purge --edit       编辑注入文件 prompt-inject.md
+  dsh-purge --diagnose   锚点漂移诊断（含候选行号）
+  dsh-purge --reanchor   本地重锚（不改插件源码）
   dsh-purge --help       帮助`);
     return;
   }
@@ -136,6 +239,10 @@ async function main() {
       console.log(`  → 已打开 ${r.editor} 编辑注入文件：${r.path}`);
     }
     console.log("  编辑完成后重启 dsh 生效。");
+  } else if (mode === "--diagnose") {
+    await runDiagnose(state, args.includes("--json"));
+  } else if (mode === "--reanchor") {
+    await runReanchor(state, args);
   } else {
     console.log("默认不清洗，使用 --apply 应用清洗。");
   }

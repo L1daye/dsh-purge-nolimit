@@ -1,3 +1,89 @@
+# 2.3.36
+
+> 本版把 kingcharleslzy-ai/dsh-purge（community 1.7.19）里值得抄的工程化能力整套搬过来：
+> asar handoff、本地重锚、语义验证、更新系统、快照回滚、语义分层、补丁表拆分。
+> 补丁语义一条没改——`ALL_PATCHES` 用快照逐条比对，88 条 / 238 个 replacement **零差异**。
+
+## 中文
+
+- 版本 **2.3.36**。测试 163 → **186**（新增 `test/ported-modules.test.mjs`，23 条覆盖全部移植模块的正反两面）。
+
+- **语义分层（`lib/layers.js`）**：38 层覆盖全部 88 条。面板从「71/71」变成
+  「哪一层没达标 + 影响是什么」。带 `checkLayerCoverage()` 运行时断言——
+  任何补丁没被分进任何层会直接报错，不会从面板上凭空消失。
+
+- **语义验证（`lib/verifiers.js`）**：给 #15/#16/#35/#62 挂 `verify(text, fp)`，
+  engine 的 `filePatchSettled()` 见到它就**完全绕开 marker**。新增 `requireAllTargets`，
+  挡住「只改中一份就报 applied」。这是 2.3.32 那次 #62 半破的正式解法。
+
+- **本地重锚（`lib/anchors.js` + `lib/diagnose.js` + CLI）**：
+  `--diagnose` 报出失配的补丁/文件/第几个 anchor + 候选行号；
+  `--reanchor <id> --index n --lines A-B [--yes]` 落地，覆盖写
+  `$DSH_HOME/dsh-purge/anchor-overrides.json`（0600），删掉即恢复出厂锚点。
+  宿主升级后用户能自己修，不用等发版。
+
+- **asar handoff（`windows-asar-handoff.js` / `macos-asar-handoff.js` / `desktop-handoff.js`）**：
+  带哈希校验、状态文件、token、超时、锁的正式实现。前置闸「解包不完整绝不改名」，
+  改名前后双哈希核对，只对 `win32_code 32/33`（共享冲突）继续轮询。
+
+- **启动自动应用降级**：检测到 `app.asar` 与 `resources/app/` 并存（官方更新后重现）
+  就**不写盘**，删掉 applied stamp 让面板如实显示 pending，并提示用户点一次「应用」。
+  这正是 2.3.35 那次「面板 71/71 但一条没生效」的根因治理。
+
+- **更新系统（12 个 `update-*.js`）**：行为偏好与网络凭据分文件
+  （`update-preferences.json` / `update-channel.json`），镜像、SOCKS、系统代理、
+  状态机、完整性校验分开。设计原则照抄：**永不自动应用补丁、永不自动重启**。
+
+- **快照回滚（`rollback-transaction.js` / `install-registry.js` / `remove-tree.js` /
+  `atomic-files.js` / `path-boundary.js` / `maintenance-lock.js`）**、
+  **preset 体系（6 个 `preset-*.js`）**、**实例与布局解析（4 个）**、**运行时开关
+  （`tuning.js` / `boost.js` / `steering.js` / `apply-gate.js`）** 一并移植。
+
+- **补丁表拆分**：`core.js` 390 KB → 214 KB。`CODE_PATCHES`(3) / `ENGINE_PATCHES`(8) /
+  `NEW_TOOL_PATCHES`(67) 移进 `lib/patches/`，`PATCHES`(10) 因依赖 10 个共享常量
+  （其中 3 个是函数，外移会形成循环依赖）暂留 core.js。
+
+- **`/audit` `/preflight`** 之外新增 `--diagnose` / `--reanchor` 两个 CLI 子命令。
+
+- **打包命令改显式清单**：GNU tar 的 `--exclude` 是未锚定路径片段匹配，
+  `--exclude=patches` 会连 `lib/patches/` 一起排掉（本次踩过），
+  改成显式清单 + 打完 `tar -tzf | grep -c '^lib/patches/'` 必须等于 5。
+
+## English
+
+- **2.3.36.** Tests 163 → **186** (new `test/ported-modules.test.mjs`).
+
+- **Semantic layers (`lib/layers.js`)**: 38 layers covering all 88 patches, so the panel
+  can say *which* limit is still in place instead of just `71/71`. `checkLayerCoverage()`
+  throws if a patch is missing from every layer — silent disappearance is a defect.
+
+- **Semantic verifiers (`lib/verifiers.js`)**: `verify(text, fp)` on #15/#16/#35/#62 makes
+  `filePatchSettled()` bypass markers entirely; `requireAllTargets` stops "one file applied
+  ⇒ whole patch applied". This is the formal fix for the 2.3.32 #62 half-break.
+
+- **Local re-anchoring (`lib/anchors.js` + `lib/diagnose.js` + CLI)**: `--diagnose` reports
+  the failing patch/file/anchor plus candidate line numbers; `--reanchor … --lines A-B [--yes]`
+  writes `anchor-overrides.json` (0600). Delete the file to restore factory anchors.
+
+- **asar handoff**: the Windows/macOS modules wait for a full Electron quit, verify hashes
+  before and after the rename, and refuse to rename unless the extracted `app/` is complete.
+
+- **Auto-apply degradation**: when `app.asar` reappears over `resources/app/` (official
+  update), the plugin **does not write**, drops the applied stamp so the panel shows
+  pending, and tells the user to press Apply once.
+
+- **Update subsystem (12 modules)**, **snapshot rollback**, **preset system**, **instance
+  and layout resolution**, **runtime switches** — all ported. Design rule kept verbatim:
+  never auto-apply patches, never auto-restart.
+
+- **Patch table split**: `core.js` 390 KB → 214 KB. `ALL_PATCHES` verified byte-identical
+  to a pre-split snapshot (88 patches / 238 replacements, 0 diffs).
+
+- **Packaging now uses an explicit include list**: GNU tar's `--exclude` matches path
+  fragments, so `--exclude=patches` also drops `lib/patches/` (hit this in 2.3.36).
+
+---
+
 # 2.3.35
 
 ## 中文
