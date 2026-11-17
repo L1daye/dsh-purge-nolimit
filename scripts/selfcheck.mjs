@@ -80,7 +80,7 @@ async function main() {
   rec(pluginVersion ? "PASS" : "FAIL", "plugin.present", pluginVersion || "dsh-purge not found under profiles/*/node_modules");
 
   const selfPkg = readJson(path.join(HERE, "..", "package.json"));
-  rec("INFO", "plugin.self", `${selfPkg?.version ?? "?"} dshTarget=${selfPkg?.dshTarget ?? "?"}`);
+  rec("INFO", "plugin.self", `${selfPkg?.version ?? "?"} dshTarget=${selfPkg?.dshTarget ?? "?"}` + (Array.isArray(selfPkg?.dshTargets) && selfPkg.dshTargets.length > 1 ? ` (also: ${selfPkg.dshTargets.filter((v) => v !== selfPkg.dshTarget).join("/")})` : ""));
 
   // ── 2. 宿主定位 ─────────────────────────────────────────────
   rec(aiBase ? "PASS" : "FAIL", "host.aiBase", aiBase || "findAiBase() 返回空",
@@ -108,13 +108,18 @@ async function main() {
     rec("FAIL", "loader.asar_shadow", "既没有 app.asar 也没有 resources/app");
   }
 
-  // 目标版本与 app/ 版本是否一致（防止解的是旧归档）
-  const target = String(selfPkg?.dshTarget || "");
-  if (appPkg && target) {
-    const same = appPkg.version === target;
+  // 目标版本与 app/ 版本是否一致（防止解的是旧归档）。
+  //
+  // 一个包同时服务多个宿主版本：`dshTargets` 里任何一个都算达标，
+  // `dshTarget` 只是"主目标"（用于展示）。只看单值会把另一台机器误判成漂移。
+  const targets = Array.isArray(selfPkg?.dshTargets) && selfPkg.dshTargets.length
+    ? selfPkg.dshTargets.map(String)
+    : [String(selfPkg?.dshTarget || "")].filter(Boolean);
+  if (appPkg && targets.length) {
+    const same = targets.includes(appPkg.version);
     rec(same ? "PASS" : "WARN", "loader.versionMatch",
-      `app=${appPkg.version} dshTarget=${target}`,
-      same ? "" : "解包出来的版本和 dshTarget 不一致，锚点可能对不上");
+      `app=${appPkg.version} targets=${targets.join("/")}`,
+      same ? "" : "解包出来的版本不在已验证列表里，锚点可能对不上");
   }
 
   // ── 4. CLI 启动器 ──────────────────────────────────────────

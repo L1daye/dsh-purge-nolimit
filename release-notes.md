@@ -1,3 +1,54 @@
+# 2.3.37
+
+> 一个包同时服务三个宿主版本。`dshTarget` 改回 **`0.2.2-rc.1`**（本机在用的版本），
+> 新增 `dshTargets` 列表与 `dshCompatibility` 说明；`selfcheck` 的版本判定从
+> 「等于单值」改成「属于已验证列表」，另一台 rc.3 机器不会再被误报成漂移。
+>
+> **rc.1 比 rc.3 多打 16 条。** 实测（Windows desktop，`DSH_SURFACE=desktop`）：
+>
+> | | rc.1（本机） | rc.3（测试机） |
+> |---|---|---|
+> | applied | **86** | 70 |
+> | na | 0 | 15 |
+> | skipped | 2 | 3 |
+>
+> 差在：rc.1 仍随包发 `dsh-hooks-claude-code` / `dsh-hooks-codex`，
+> 所以 #30/#31/#64/#65 四条 hooks 补丁能打；rc.3 没这两个包，四条全 na。
+> 另外 #56（回退隐藏）在 rc.3 上前端 bundle 重压缩后锚点消失，rc.1 上正常 applied。
+
+## 中文
+
+- 版本 **2.3.37**。`dshTarget` → `0.2.2-rc.1`，新增：
+  - `dshTargets: ["0.2.2-rc.1", "0.2.2-rc.2", "0.2.2-rc.3"]`
+  - `dshCompatibility.dsh: ">=0.2.1-rc.1 <0.3.0"` + 逐版本 `verified` / `unknown`
+- `scripts/selfcheck.mjs` 的 `loader.versionMatch` 改成接受列表；展示行会带上
+  「also: rc.2/rc.3」。
+- 本机 rc.1 实测：**86 applied / 2 skipped / 0 na / 0 pending**，
+  `selfcheck` **14 pass / 0 fail / 0 warn**，分层 **35 ok / 3 na**。
+  唯二 skipped 是 `#76`（内置 preset 自带中文人设）与 `#80`（极简预设从未追加 fs/web），都是设计内。
+- 本机之前那条 `#62 = pending` 已在安装时补上（`written=#62`），
+  4 个 fail-open deny 分支全部收敛。
+
+## English
+
+- **2.3.37**, `dshTarget` back to **`0.2.2-rc.1`** (the version the user actually runs),
+  plus `dshTargets` and a `dshCompatibility` table. `selfcheck`'s version check now
+  accepts any listed target, so the rc.3 test machine is not reported as drift.
+
+- **rc.1 gets 16 more patches than rc.3.** Measured on Windows desktop:
+  rc.1 = 86 applied / 0 na / 2 skipped; rc.3 = 70 applied / 15 na / 3 skipped.
+  rc.1 still ships the `dsh-hooks-claude-code` / `dsh-hooks-codex` packages, so
+  #30/#31/#64/#65 apply; rc.3 dropped them, and #56 lost its anchor to a front-end
+  bundle recompress.
+
+- Local rc.1: `selfcheck` **14 pass / 0 fail / 0 warn**, 38 layers **35 ok / 3 na**,
+  idempotent. The only two skips are #76 and #80, both by design.
+
+- The previously deferred `#62 = pending` was written during install; all four
+  fail-open deny branches now converge.
+
+---
+
 # 2.3.36
 
 > 本版把 kingcharleslzy-ai/dsh-purge（community 1.7.19）里值得抄的工程化能力整套搬过来：
