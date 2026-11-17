@@ -1,3 +1,54 @@
+# 2.3.34
+
+> **本版是为 0.2.2-rc.3 宿主做的回归。** 客户端从 rc.1 升到 rc.3 之后，补丁表在
+> 真实 rc.3 产物上跑了完整一轮：61 条写入、第二轮 0 写入（收敛）。
+> 只有 `#18` 是真漂移，本版补上它的 rc.3 锚点。
+
+## 中文
+
+- 版本 **2.3.34**，`dshTarget` 改为 **`0.2.2-rc.3`**。
+- **`#18 REPEAT_TOOL_REMINDER_DISABLED` 补 rc.3 锚点**：rc.3 的 `tools/post-execute`
+  处理器去掉了 `block` 分支，只剩「透传 + 前置上下文」，原锚点（带 `block` 分支）在 rc.3 上
+  恒 `skipped`，重复调用守卫继续生效。追加精简版锚点后正常 `applied`，并验证
+  `post-execute` 钩子与 `observe()` 均已从宿主源码移除。
+- **rc.1 → rc.3 实测结果**（全新密封 asar 解包后）：
+  - 解包 `app.asar` 20051 文件 / 6.9 秒
+  - `applyPatches` 第一轮写入 **61 条**，第二轮 **0 条**（幂等收敛）
+  - `patchStatus` 最终 **70 applied / 15 na / 3 skipped**
+  - 剩余 3 条 `skipped` 全是设计内的软补丁：`#56`（前端 bundle 重压缩，标记不再出现）、
+    `#76`（内置 preset 自带中文人设）、`#80`（极简预设从未追加 fs/web）
+  - 8 条 `missing_file` 全是「本机没装那个包」：`liangshen-tool-bootstrap`、
+    `hooks-claude-code` / `hooks-codex`、`pi-ai-*`
+- **`#62` 在 rc.3 上复核通过**：`dsh-tools/lib/pipeline.js` 与
+  `dsh-tools/lib/types/pipeline.js` 的 4 个 fail-open 分支全部 `allow`，
+  `case "unavailable"` 在两份文件里都改成 `allow`（rc.3 的 `approvalDenial(...)` 形态命中），
+  剩余 `approvalDenial` 只剩 `rejected` / `cancelled` 与助手定义本身。
+- 客户端升级后用真实 rc.3 启动验证：插件 `[boot] enabled=true surface=desktop`
+  与 `[guard.wrap] mounted=true` 均正常，自带更新检查回报「已是最新版」。
+
+## English
+
+- **2.3.34**, `dshTarget` now **`0.2.2-rc.3`**.
+- **`#18 REPEAT_TOOL_REMINDER_DISABLED`: added the rc.3 anchor.** In rc.3 the
+  `tools/post-execute` handler dropped its `block` branch and only passes through plus
+  prepends context, so the old anchor never matched and the repeat-call guard stayed live.
+  After the addition it applies, and both the hook and `observe()` are verified gone from
+  the host source.
+- **rc.1 → rc.3 measured** (fresh sealed asar, extracted first): 20051 files in 6.9 s;
+  `applyPatches` wrote **61** on the first round and **0** on the second (idempotent);
+  final `patchStatus` is **70 applied / 15 na / 3 skipped**. The three skips are the
+  by-design soft patches `#56`, `#76`, `#80`; the eight `missing_file` entries are packages
+  this machine does not have (`liangshen-tool-bootstrap`, `hooks-claude-code`/`hooks-codex`,
+  `pi-ai-*`).
+- **`#62` re-verified on rc.3**: all four fail-open branches in `dsh-tools/lib/pipeline.js`
+  and `dsh-tools/lib/types/pipeline.js` return `allow`, `case "unavailable"` is `allow` in
+  both files via the rc.3 `approvalDenial(...)` forms, and the remaining `approvalDenial`
+  references are only `rejected` / `cancelled` plus the helper definition.
+- Booted a real rc.3 client to confirm: `[boot] enabled=true surface=desktop` and
+  `[guard.wrap] mounted=true`, and the built-in updater reports "already latest".
+
+---
+
 # 2.3.33
 
 > **本版主修 #62 的一个静默半破：`dsh-tools/lib/pipeline.js` 与
