@@ -151,6 +151,31 @@ node -e "import('file:///.../lib/core.js').then(m => console.log(Object.keys(m.t
 
 **四层，从便宜到贵。前两层秒级，第三层秒级，第四层要有真实会话。**
 
+### Layer 0: 一条命令跑完全部
+
+```bash
+node scripts/selfcheck.mjs              # 人读
+node scripts/selfcheck.mjs --json       # 机器读
+node scripts/selfcheck.mjs --http       # 额外查运行中的宿主
+node scripts/selfcheck.mjs --http-port 58330
+```
+
+只读，不写任何宿主文件。退出码：`0` 全过 / `1` 有 FAIL / `2` 只有 WARN。
+
+它一次覆盖这些「状态看着正常但实际空转」的坑：
+
+| 检查 id | 抓什么 |
+| --- | --- |
+| `loader.asar_shadow` | `app.asar` 与 `app/` 并存 → Electron 加载归档，补丁全部空转（陷阱 21） |
+| `loader.versionMatch` | 解出来的 `app/` 版本 ≠ `dshTarget` → 锚点对不上 |
+| `cli.*` | rc.3 起 `runtime/cli/bin` 为空 → `dsh` 命令消失（陷阱 22） |
+| `patch.nonApplied` | 把「设计内软跳过」和「真漂移」分开报 |
+| `patch.idempotent` | 内存比对，看再 apply 会不会还改文件（不落盘） |
+| `prompt.slot` | 槽有没有重新 seal、关键段落齐不齐 |
+| `live.status` / `live.audit` | 带 `--http` 时查运行中宿主的真数字 |
+
+**部署完先跑这个，再看下面几层。** 它挡的是「补丁报告全绿但没生效」——那是面板看不出来的。
+
 ### Layer 1: 语法
 
 ```bash
@@ -1122,8 +1147,9 @@ E:\test\                         工作区
 **验证顺序建议**：
 
 ```
-node --check  →  真实 apply  →  /dsh-purge/status  →  verify-patches.ps1
+selfcheck.mjs  →  node --check  →  真实 apply  →  /dsh-purge/status
   →  verify-preset.cjs  →  行为探针
 ```
 
-前两步挡语法和形状错误，中间两步挡锚点和状态错误，后两步挡"改了但没生效"。
+`selfcheck` 先跑：它一条命令就挡掉「asar 遮住 app/」「CLI 没了」「解的是旧归档」这三类
+面板看不出来的空转。后面几步再挡语法、锚点、状态和"改了但没生效"。

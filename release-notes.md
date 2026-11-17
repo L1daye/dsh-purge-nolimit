@@ -1,3 +1,39 @@
+# 2.3.35
+
+## 中文
+
+- 版本 **2.3.35**，新增 **`scripts/selfcheck.mjs`**（`npm run selfcheck`）。
+  一条命令跑完「部署完到底有没有真的生效」，专门挡那些**补丁状态全绿但实际空转**的情况：
+  - `loader.asar_shadow`：`app.asar` 与 `app/` 并存 → Electron 加载归档，补丁一条都不生效
+  - `loader.versionMatch`：解出来的 `app/` 版本 ≠ `dshTarget` → 锚点对不上
+  - `cli.*`：rc.3 起 `runtime/cli/bin` 为空 → `dsh` 命令消失
+  - `patch.nonApplied`：把「设计内软跳过」和「真漂移」分开报
+  - `patch.idempotent`：内存比对，看再 apply 会不会还改文件（不落盘）
+  - `prompt.slot`：槽有没有重新 seal、关键段落齐不齐
+  - 带 `--http` 额外查运行中宿主的 `patches/lost/assemble_failures` 与 `audit`
+
+  只读，退出码 `0` 全过 / `1` 有 FAIL / `2` 只有 WARN。`--json` 给机器读。
+
+- AGENTS.md 补两条陷阱：**21**（只解包不挪 `app.asar` → 补丁空转）、
+  **22**（rc.3 的 `resources/runtime/cli/bin` 为空 → `dsh` 命令消失，附 `ELECTRON_RUN_AS_NODE` shim）。
+  §3 新增 Layer 0，把 selfcheck 放在所有验证之前。
+
+## English
+
+- **2.3.35** adds **`scripts/selfcheck.mjs`** (`npm run selfcheck`): one command that answers
+  "did the deploy actually take effect", aimed at the cases where patch status is all green but
+  nothing is live — `app.asar` still shadowing `resources/app`, an extracted tree whose version
+  does not match `dshTarget`, a missing `runtime/cli/bin`, real drift vs. by-design soft skips
+  (separated), non-idempotent patches (checked in memory, never written), and a prompt slot that
+  was never re-sealed. `--http` also queries the running host for `patches/lost/assemble_failures`
+  and `audit`. Read-only; exit `0` clean / `1` fail / `2` warn; `--json` for machines.
+- AGENTS.md gains traps **21** (extracting `app.asar` without renaming it aside leaves Electron
+  loading the archive, so every code patch is inert) and **22** (rc.3 ships `resources/runtime`
+  empty, so `dsh` disappears; includes the `ELECTRON_RUN_AS_NODE` shim). Section 3 gets a new
+  Layer 0 that runs selfcheck before everything else.
+
+---
+
 # 2.3.34
 
 > **本版是为 0.2.2-rc.3 宿主做的回归。** 客户端从 rc.1 升到 rc.3 之后，补丁表在
