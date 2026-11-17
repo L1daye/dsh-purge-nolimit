@@ -895,6 +895,92 @@ while (from >= 0 && guard < 50) { ... from = text.lastIndexOf('"system/message"'
 
 ---
 
+### 陷阱 21：只解包不挪走 `app.asar` → Electron 仍加载归档，补丁全部空转
+
+**症状**：补丁状态一切正常（面板显示 `71/71 已写入`），磁盘上 `resources/app/dsh/...` 里标记
+都在，但**行为上一条都没生效**——沙箱默认模式、审批策略、提权豁免、fs 围栏全是官方原样。
+注入层却是好的（它走 `prompt-inject.md`，跟宿主代码无关），所以症状很像"只破了一半"。
+
+**原因**：Electron 解析 `resources` 时**先看 `app.asar`，再看 `app/`**。两个同时存在时，
+加载的是归档，`app/` 里被改写过的文件根本不会被 require。
+
+`asarShadowsPath()` 只决定**插件自己读写用哪套 fs**（有归档时切 `diskFs()` 直接落盘），
+它**不影响宿主加载哪一份**。这两件事容易混：
+
+```
+插件写入 → diskFs() → 改的是 resources/app/... 的真实文件      ✔ 写对了
+宿主加载 → app.asar → 读的是归档里的原始代码                    ✘ 没生效
+```
+
+**踩到的场合**：升级客户端后手动调 `extractAsarToSide()` + `commitExtractedDir()` 解包，
+以为完事——漏了挪归档这一步。
+
+**修法**：解包之后必须把归档改名挪开：
+
+```js
+import { renameAsarAside } from './lib/extract-asar.js';
+renameAsarAside('F:/DeepSeek Harness/resources/app.asar');
+// → app.asar.dshpurge.bak，此后 Electron 只能加载 resources/app/
+```
+
+插件的正常升级流程本来就做了这一步——`scheduleSealedDesktopRestart(handoff)` 里就是
+`renameAsarAside(handoff.asar)`。**手动部署别用低层原语，走 `handoff` 那条路**，
+否则要自己补：`extractAsarToSide` → `renameAsarAside` → `commitExtractedDir`。
+
+**验证**（不要看补丁状态，那会骗你）：
+
+```
+resources/app.asar          必须 ABSENT（或已改名 .bak）
+resources/app               必须存在
+resources/app/package.json  version 必须等于目标版本
+```
+
+三条都满足，才说明宿主真的在跑打补丁的那份代码。
+
+**教训**：**「文件被改了」和「进程在用它」是两件事。** 任何"改了但没生效"的排查，
+先确认加载路径，再怀疑补丁逻辑。
+
+---
+
+### 陷阱 22：rc.3 的 `resources/runtime/cli/bin` 是空的 → `dsh` 命令消失
+
+**症状**：`dsh --version` 报「不是内部或外部命令」；`findShimDir()` 与
+`findDesktopShimDir()` 都返回 `null`；`resources\runtime` 目录存在但**零个文件**。
+
+**原因**：0.2.2-rc.3 的安装包创建了 `resources/runtime` 却没有往里放 CLI 启动器
+（rc.1 有 `runtime/cli/bin/dsh.cmd`）。而 `repairOfficialCliAfterUnpack()` 的职责是
+**修补已存在的 shim**，不负责创建：
+
+```js
+if (!isFile(fp)) { report.shims.push({ path: fp, status: "missing" }); continue; }
+```
+
+所以装完 rc.3，官方 CLI 入口是缺的，插件也补不回来。
+
+**手动补 shim**（三个都要，`dsh` 给 WSL/Git Bash，`dsh.cmd` 给 cmd，`dsh.ps1` 给 PowerShell）：
+
+```
+F:\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd
+  @echo off
+  set ELECTRON_RUN_AS_NODE=1
+  "F:\DeepSeek Harness\DeepSeek Harness.exe" "F:\DeepSeek Harness\resources\app\dsh\node_modules\@deepseek-ai\dsh\lib\bin.js" %*
+```
+
+要点：
+
+- `ELECTRON_RUN_AS_NODE=1` 让 Electron 二进制以 Node 模式跑，不需要额外装 node
+- 两个路径都**必须带引号**——`F:\DeepSeek Harness` 里有空格，不加引号会报
+  `Cannot find module 'F:\DeepSeek'`
+- `.cmd` 用 ASCII + CRLF 写；`UTF8 no BOM` 在 cmd.exe 里会咬人
+
+补完 `findShimDir()` 和 `findDesktopShimDir()` 都会解析到 `runtime/cli/bin`，
+`dsh plugin add ...` 之类依赖 CLI 的功能恢复。
+
+**教训**：上游安装包会**减内容**。跨大版本升级后除了验版本号，还要验「升级前能用的入口
+现在还在不在」。
+
+---
+
 ---
 
 ## 5. 发布流程
