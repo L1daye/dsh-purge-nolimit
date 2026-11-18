@@ -238,17 +238,38 @@ async function main() {
   // ── 8. 运行中的宿主（可选）──────────────────────────────────
   if (wantHttp) {
     const base = `http://127.0.0.1:${forcedPort || 11336}`;
+    let liveStatus = null;
     for (const [id, route] of [["live.status", "/dsh-purge/status"], ["live.audit", "/dsh-purge/audit"]]) {
       try {
         const r = await fetch(base + route);
         const j = await r.json();
         if (route.endsWith("status")) {
+          liveStatus = j;
           rec(j.ok ? "PASS" : "FAIL", id,
             `surface=${j.surface} patches=${j.patches_applied}/${j.patches_total} pending=${j.patches_pending} na=${j.patches_na} lost=${j.patches_lost} assemble_failures=${JSON.stringify(j.assemble_failures ?? null)}`);
         } else {
           rec(j.full_break ? "PASS" : "FAIL", id, `passed=${j.passed}/${j.total} full_break=${j.full_break} version=${j.version}`);
         }
       } catch (e) { rec("WARN", id, `连不上 ${base}${route}：${e.message}`, "宿主没跑或端口不同，用 --http-port 指定"); }
+    }
+
+    // 磁盘上的插件版本 vs 宿主进程里**真正加载**的版本。
+    //
+    // 注意不能用 status.plugin_version 做判据：那是每次请求读盘的
+    // updater.localVersion()，反映"磁盘上装了什么"，装完没重启时它立刻就是新版本，
+    // 拿它比等于自己跟自己比。用 boot_version —— 它在 import 时抓一次，
+    // 进程里跑的是哪版就永远是哪版。
+    const running = liveStatus && (liveStatus.boot_version || "");
+    if (running && selfPkg?.version) {
+      if (String(running) !== String(selfPkg.version)) {
+        rec("WARN", "live.versionMatch",
+          `disk=${selfPkg.version} running=${running}`,
+          "磁盘上的插件已更新但宿主还在跑旧版：重启宿主后才生效");
+      } else {
+        rec("PASS", "live.versionMatch", `disk=${selfPkg.version} running=${running}`);
+      }
+    } else if (liveStatus) {
+      rec("INFO", "live.versionMatch", "宿主未上报 boot_version（旧版插件），无法判断内存里的版本");
     }
   }
 

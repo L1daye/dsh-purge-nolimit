@@ -1,3 +1,48 @@
+# 2.3.40
+
+> 仓库权威版本对齐。**主目标 `dshTarget` = `0.2.2-rc.1`**（本机在用的版本），
+> `dshTargets` 同时覆盖 rc.1 / rc.2 / rc.3，一个包服务三版。
+> 这一版只改兼容性声明里的实测数字——之前写的是 P0/P1 移植**之前**的旧数据。
+
+## 中文
+
+- `dshCompatibility.verified` 校正为真值：
+
+  | 宿主 | 修复前（旧数据） | 现在（实测） |
+  | --- | --- | --- |
+  | `0.2.2-rc.1` | 74 applied | **86 applied / 2 skipped / 0 na**，面板 74/74 |
+  | `0.2.2-rc.3` | 70 applied | **81 applied / 3 skipped / 4 na**，面板 71/71 |
+
+  旧数字是 2.3.36 之前写的，那时还没移植语义验证与补丁表拆分；
+  rc.3 的 4 条 `na` 是 `#30/#31/#64/#65`（hooks 包上游不再随包发），
+  3 条 `skipped` 是 `#56`（前端 bundle 重压缩丢了锚点）+ `#76/#80`（设计内软补丁）。
+
+- **新增 `live.versionMatch` 检查**（`selfcheck --http`）：磁盘上的插件版本 vs 宿主
+  进程里**真正加载**的版本不一致时告警「重启后才生效」。
+
+  这条不能拿 `status.plugin_version` 当判据——它是每次请求读盘的
+  `updater.localVersion()`，反映「磁盘上装了什么」，装完没重启它立刻就是新版本，
+  比了等于自己跟自己比。为此 `lib/index.js` 增加 `BOOT_VERSION`（import 时抓一次）
+  并作为 `boot_version` 上报，那才是「进程里跑的是哪版」。
+
+- 两台机器的 `selfcheck` 都是 **16 pass / 0 fail / 0 warn**，分层都是 **38 层全 ok**，
+  破甲审计都是 **11/11**。
+
+## English
+
+- `dshCompatibility.verified` corrected to measured values: rc.1 = **86 applied /
+  2 skipped / 0 na** (panel 74/74), rc.3 = **81 applied / 3 skipped / 4 na**
+  (panel 71/71). The previous numbers predated the P0/P1 port.
+
+- Primary target stays **`0.2.2-rc.1`**; `dshTargets` covers rc.1 / rc.2 / rc.3.
+
+- New `live.versionMatch` check in `selfcheck --http`: warns when the version on disk
+  differs from the version the host process actually loaded. It deliberately does not
+  use `status.plugin_version` (read from disk per request) — `lib/index.js` now captures
+  `BOOT_VERSION` at import time and reports it as `boot_version`.
+
+---
+
 # 2.3.39
 
 > 2.3.38 之后在**本机 rc.1** 上跑同一套全量探针（76 项）时补的两个小修。

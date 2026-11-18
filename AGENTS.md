@@ -187,6 +187,7 @@ node scripts/selfcheck.mjs --http-port 58330
 | `patch.idempotent` | 内存比对，看再 apply 会不会还改文件（不落盘） |
 | `prompt.slot` | 槽有没有重新 seal、关键段落齐不齐 |
 | `live.status` / `live.audit` | 带 `--http` 时查运行中宿主的真数字 |
+| `live.versionMatch` | 磁盘上的插件版本 ≠ 进程里加载的版本 → 装完没重启（陷阱 25） |
 
 **部署完先跑这个，再看下面几层。** 它挡的是「补丁报告全绿但没生效」——那是面板看不出来的。
 
@@ -1166,6 +1167,51 @@ $p.ExitCode
 
 **教训**：**「用系统 node 跑通了」不等于「宿主里能跑」。** 验证运行时相关的东西时，
 先确认 `process.versions.node`，别假设两者一致。
+
+---
+
+### 陷阱 25：`status.plugin_version` 是**每次请求读盘**的，不能当「进程里跑的是哪版」
+
+**症状**：插件的 `lib/` 已经从 2.3.39 换成 2.3.40，宿主没重启，但
+`/dsh-purge/status` 里的 `plugin_version` 立刻显示 2.3.40——看起来已经生效，
+实际上进程里加载的还是 2.3.39 的模块。
+
+**原因**：`lib/index.js` 里
+
+```js
+plugin_version: updater.localVersion(),   // ← 每个请求现读 package.json
+```
+
+它回答的是「**磁盘上装了什么**」，不是「**进程里跑的是什么**」。
+
+**后果**：想靠它做「装完有没有重启」的判定，等于自己跟自己比，永远相等。
+所有磁盘侧检查（补丁状态、锚点、槽）都会通过，但行为一条没变——
+和陷阱 21 的 asar 遮蔽是同一类「全绿但过期」。
+
+**修法**（2.3.40）：在模块加载时抓一份真值
+
+```js
+const BOOT_VERSION = (() => {
+  try {
+    const pkgPath = new URL("../package.json", import.meta.url);
+    return String(JSON.parse(fs.readFileSync(pkgPath, "utf8")).version || "");
+  } catch { return ""; }
+})();
+```
+
+status 里同时给两个字段，语义不同别混用：
+
+| 字段 | 来源 | 含义 |
+| --- | --- | --- |
+| `plugin_version` | 每次请求读盘 | 磁盘上装了什么 |
+| `boot_version` | import 时抓一次 | 进程里加载了什么 |
+
+`selfcheck --http` 的 `live.versionMatch` 用 `boot_version` 比较，不一致就 WARN
+「重启宿主后才生效」。宿主是旧版插件（还没这个字段）时报 `INFO 无法判断`，
+不假装通过。
+
+**教训**：**「能读到版本号」不等于「读到的是正在运行的那份」。**
+凡是判断「改动有没有生效」，都要问一句：这个值是谁、什么时候读的。
 
 ---
 

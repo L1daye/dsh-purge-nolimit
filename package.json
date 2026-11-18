@@ -1,6 +1,6 @@
 {
   "name": "dsh-purge",
-  "version": "2.3.39-dsh022",
+  "version": "2.3.40-dsh022",
   "description": "DeepSeek Harness 全量破甲版：无靶场限制、无外挂拦截、无授权弹窗。88 条宿主补丁 + 提示词注入 + 无限制预设 + 拒绝重试 + 注入探针。Jailbreak for every model — full-unrestricted build.",
   "type": "module",
   "main": "lib/index.js",
@@ -109,8 +109,8 @@
       "note": "scripts/selfcheck.mjs 与 bin/dsh-purge.js 用系统 node 跑时，运行时和宿主不是同一个；redteam 相关结论必须以宿主运行时为准"
     },
     "verified": {
-      "0.2.2-rc.1": "Windows desktop: 74 applied / 0 drift / idempotent",
-      "0.2.2-rc.3": "Windows desktop: 70 applied / 0 drift / idempotent (hooks packages no longer shipped upstream)"
+      "0.2.2-rc.1": "Windows desktop: 86 applied / 2 skipped (#76 #80, by design) / 0 na / 0 drift / idempotent; panel 74/74",
+      "0.2.2-rc.3": "Windows desktop: 81 applied / 3 skipped (#56 #76 #80) / 4 na (#30 #31 #64 #65 hooks packages not shipped upstream) / 0 drift / idempotent; panel 71/71"
     },
     "unknown": [
       "0.2.2-rc.2",
