@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge-nolimit）</h1>
 
-<p align="center"><strong>Version 2.3.32-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.40-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 無制限解除：レンジ制限なし、チート遮断なし、承認ダイアログなし。Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -20,7 +20,7 @@
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-  <img src="https://img.shields.io/badge/tests-163%20passing-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-197%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@
 
 ## dsh-purge-nolimit について
 
-本リポジトリは **dsh-purge の無制限版 dsh-purge-nolimit**（2.3.32）です。原版 dsh-purge 1.1.82 を基に、すべてのセッションゲートと承認ダイアログを撤廃し、実用機能を継続的に追加しています：
+本リポジトリは **dsh-purge の無制限版 dsh-purge-nolimit**（2.3.40）です。原版 dsh-purge 1.1.82 を基に、すべてのセッションゲートと承認ダイアログを撤廃し、実用機能を継続的に追加しています：
 
 - 公開 / プライベート / ドメインのターゲットをすべて許可。IP レンジ判定を行いません。
 - ゲームチート、メモリ改変、インジェクション、アンチチート回避をすべて許可。
@@ -76,6 +76,14 @@
 | **2.3.30** | プローブセクションの登録位置を修正 |
 | **2.3.31** | プローブの判定をセッションログの読み取りに変更（モデルの応答に依存しない） |
 | **2.3.32** | セッションファイルのサイズ上限による**偽陰性**を修正 |
+| **2.3.33** | `#62` の静かな半壊を修正。DSML ツール呼び出しガードを追加。自動継続が復活 |
+| **2.3.34** | rc.3 の全量回帰。`#18` に rc.3 アンカーを追加 |
+| **2.3.35** | `scripts/selfcheck.mjs` —— コマンド一つで「緑だが空回り」を捕捉 |
+| **2.3.36** | **コミュニティ版のエンジニアリングを取り込み**：asar handoff、ローカル再アンカー、意味検証器、更新サブシステム、スナップショット巻き戻し、38 層の意味グループ、パッチ表の分割 |
+| **2.3.37** | 一つのパッケージで rc.1 / rc.2 / rc.3 に対応（`dshTargets`） |
+| **2.3.38** | 全量プローブが暴いた実バグ三件：`import` で実行されるスクリプト入口、`ok` に到達できない三層、読めない `node:sqlite` エラー |
+| **2.3.39** | `--diagnose --json` が純粋な JSON を出力 |
+| **2.3.40** | リポジトリは rc.1 を主対象に。互換性の数値を実測値へ。`live.versionMatch` が「導入したが未再起動」を捕捉 |
 
 ### 2.2.x 以前
 
@@ -111,7 +119,7 @@
 
 ## これは何か
 
-**dsh-purge** は、利用者自身のマシンにインストールされた公式 [DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチーム評価プラグインです。**2.3.32** は **DSH 0.2.2-rc.1** に対応（rc.2 / rc.3 / rc.5 も通過）。公式 **Web**（`dsh web`）と公式**デスクトップ** EXE の両方に対応し、それぞれ別々にインストール・適用します。
+**dsh-purge** は、利用者自身のマシンにインストールされた公式 [DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチーム評価プラグインです。**2.3.40** は **DSH 0.2.2-rc.1** を主対象とし、同一パッケージで rc.2 / rc.3 にも対応します。公式 **Web**（`dsh web`）と公式**デスクトップ** EXE の両方に対応し、それぞれ別々にインストール・適用します。
 
 Harness は単に質問をモデルへ渡すだけではありません。実行時にプロンプト、承認ゲート、サンドボックス、セッション形式を書き換えます。「モデルが答えたか」だけを見ると、ホスト側の遮断をモデルの拒否と誤認します。本プラグインはその二層を自分のインストール内で分離し、統制された評価と、既定方針を締めるべきかの判断に使います。
 
@@ -139,27 +147,41 @@ Harness は単に質問をモデルへ渡すだけではありません。実行
 
 ## 対応ホスト
 
-**2.3.32 は DSH 0.2.2-rc.1 に対応**。0.2.2 の rc.2 / rc.3 / rc.5 も通過します。
+**2.3.40 は DSH 0.2.2-rc.1 を主対象**とします（実測もこの版）。同一パッケージで
+rc.2 / rc.3 にも対応します —— パッチ表は加算式で、各ホストが自分のアンカーに一致します。
 
 | ホスト | 使用バージョン |
 | --- | --- |
-| **DSH 0.2.2-rc.1 … rc.5** | **2.3.32**（本版） |
+| **DSH 0.2.2-rc.1** | **2.3.40**（主対象） |
+| **DSH 0.2.2-rc.2 / rc.3** | **2.3.40**（`dshTargets` が対応） |
 | DSH 0.2.1-rc.x | 2.2.x 以前 |
 | DSH 0.2.0-rc.2 | 1.1.40 以降 |
 | DSH 0.1.7（rc.1 / rc.2 含む） | 1.1.39 以前 |
 
 一致しないパッチは「適用待ち」または「スキップ」と表示され、ファイルを壊すことはありません。
 
-**実測値**（2 台、DSH 0.2.2-rc.1）：
+**実測値**（Windows デスクトップ 2 台、`DSH_SURFACE=desktop`）：
+
+| | DSH 0.2.2-rc.1 | DSH 0.2.2-rc.3 |
+| --- | --- | --- |
+| パネル | **74/74** | **71/71** |
+| applied | 86 | 81 |
+| na | 0 | 4（`#30 #31 #64 #65` —— hooks パッケージが上流で同梱されなくなった） |
+| skipped | 2（`#76 #80`、設計どおり） | 3（`#56 #76 #80`） |
+| 意味レイヤ | 38 ok | 38 ok |
+| 解除チェック | 11/11 | 11/11 |
+| selfcheck | 16 pass / 0 fail | 16 pass / 0 fail |
+| 全量プローブ | 76/76 | 76/76 |
 
 ```
-パッチ      74/74 適用（applied=86 skipped=2, optional=2）
-解除チェック 11/11
-レッドチーム 15/15
-ユニットテスト 163/163
-プロンプト   34426 B  MERGED-1.1.71（三つとも SHA256 一致）
-プリセット   redteam 28534 B / unrestricted 16078 B、いずれも toolFilter=0
+ユニットテスト 197/197
+プロンプト     20172 文字（35582 B）、封印スロット、主要セクション揃い
+プリセット     redteam 28534 B / unrestricted 16078 B、いずれも toolFilter=0
 ```
+
+rc.1 は rc.3 より 5 本多く適用されます。rc.1 は `dsh-hooks-claude-code` /
+`dsh-hooks-codex` を同梱しているため hooks パッチ 4 本が残り、`#56` もアンカーが
+生きています（rc.3 ではフロントエンドのバンドル再圧縮で失われました）。
 
 ---
 
@@ -178,11 +200,11 @@ DSH のデスクトップ版ではどのプラグインでも同じです。プ�
 実行してください。
 
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) から
-`dsh-purge-nolimit-2.3.32-dsh022.tar.gz` を取得し、スクリプトと同じディレクトリに
+`dsh-purge-nolimit-2.3.40-dsh022.tar.gz` を取得し、スクリプトと同じディレクトリに
 置いて実行します：
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz
 ```
 
 スクリプトは次の順に処理します：既存の設定とプラグインディレクトリをバックアップ、
@@ -216,7 +238,17 @@ $port = <ホストのポート>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-`plugin=2.3.32-dsh022` と `patches=74/74` が出ていれば正常です。数値が違う場合は
+rc.1 では `plugin=2.3.40-dsh022` と `patches=74/74` が出ていれば正常です（rc.3 では 71/71）。
+
+より確実なのは同梱のセルフチェックです。パネルからは見えない失敗も捕捉します。
+
+```powershell
+node node_modules\dsh-purge\scripts\selfcheck.mjs --http --http-port <ホストのポート>
+```
+
+終了コード `0` で全項目通過。`loader.asar_shadow` は `app.asar` が展開済みの
+`app/` を覆い隠している状態（パッチは書けたが読み込まれない）を、`live.versionMatch`
+は「導入したが未再起動」を検出します。
 「適用」を一度押して再起動してください。
 
 ### 手動インストール（スクリプトが動かない場合）
@@ -233,13 +265,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 次に `$prof\package.json` を 2 か所修正します。`dependencies` に追加：
 
 ```json
-"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
+"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.40-dsh022.tar.gz"
 ```
 
 `dsh.profile.bundles` の配列末尾に `"dsh-purge"` を追加します。
@@ -318,7 +350,15 @@ Releases の tarball と、GitHub の「Download ZIP」で得られるソース�
 ```
 bin/                 コマンドライン
 lib/                 パッチ表、適用エンジン、注入、観測、プローブ
-  core.js            ALL_PATCHES（88 条）+ 適用エンジン + targetFiles
+  core.js            適用エンジン + targetFiles（パッチ表は分離済み）
+  patches/           パッチ表モジュール —— code(3) / engine(8) / new-tools(67)
+  layers.js          38 層の意味グループ：どの制限が残っているか
+  verifiers.js       #15/#16/#35/#62 の意味検証器 + requireAllTargets
+  anchors.js         ローカル再アンカー（anchor-overrides.json）
+  diagnose.js        アンカー漂流の診断、候補行番号つき
+  windows-asar-handoff.js  Electron の完全終了を待ってからアーカイブを退避
+  macos-asar-handoff.js
+  update-*.js        12 個の更新サブシステム（設定と資格情報を別ファイルに）
   index.js           cordis プラグイン入口、HTTP ルート、systemPrompt waterfall
   identity.js        身元判定、プリセット認識、注入本文の書き換え
   verify.js          フライトレコーダー + タイムライン
@@ -330,7 +370,7 @@ lib/                 パッチ表、適用エンジン、注入、観測、プ�
 presets/
   redteam/           レッドチーム指揮プリセット
   unrestricted/      無制限モード（2.3.17+）
-test/                20 ファイル / 163 ケース
+test/                25 ファイル / 197 ケース
 client.js            サイドバー（React、ビルド済み）
 cordis.patch.yml     profile 層のパッチ宣言
 ```
@@ -445,6 +485,51 @@ atomicCopyFile(src, dst)   // 権限はコピー元に従う
 
 ---
 
+### セルフチェック（selfcheck.mjs、2.3.35+）
+
+```bash
+node scripts/selfcheck.mjs                 # 人向け
+node scripts/selfcheck.mjs --json          # 機械向け
+node scripts/selfcheck.mjs --http --http-port <ホストのポート>
+```
+
+読み取り専用。終了コード `0` で全項目通過。パネルからは見えない失敗を捕捉します：
+`app.asar` が展開済みの `app/` を覆い隠す、rc.3 に CLI ランチャーが無い、ディスク上は
+緑だがメモリ上は旧版（`live.versionMatch`）、パッチが冪等でない。
+
+### 意味レイヤ（layers.js、2.3.36+）
+
+88 本のパッチを **38 層**にグループ化し、「この行が書き換わったか」ではなく
+「どの制限がまだ効いているか」を答えます。`checkLayerCoverage()` はどの層にも属さない
+パッチがあると例外を投げるので、パネルから静かに消えることはありません。
+
+### ローカル再アンカー（2.3.36+）
+
+ホスト更新でアンカーが壊れても、新版のリリースを待つ必要はありません：
+
+```bash
+dsh-purge --diagnose                                     # 失敗したパッチ/ファイル/アンカー + 候補行
+dsh-purge --diagnose --json                              # 純粋な JSON
+dsh-purge --reanchor 95 --index 1 --lines 990-1000       # プレビュー（書き込みなし）
+dsh-purge --reanchor 95 --index 1 --lines 990-1000 --yes # 確定
+dsh-purge --reanchor clear 95                            # 取り消し
+```
+
+上書きは `$DSH_HOME/dsh-purge/anchor-overrides.json` に保存され、削除すれば工場出荷の
+アンカーに戻ります。
+
+### 意味検証器（verifiers.js、2.3.36+）
+
+マーカーは「ここ一箇所を書き換えた」ことしか証明できません。そこで `#15/#16/#35/#62` には
+`verify(text, fp)` を付け、マーカー判定を完全に迂回します。さらに `requireAllTargets` で
+「一ファイルだけ直してパッチ全体を適用済みと報告する」ことを防ぎます。
+
+### asar ハンドオフ（2.3.36+）
+
+`windows-asar-handoff.js` / `macos-asar-handoff.js` は Electron の完全終了を待ち、
+リネーム前後でハッシュを検証し、展開が不完全なら改名を拒否します —— これが
+「パッチを書いた」と「パッチが読み込まれた」の差です。
+
 ## 応答速度
 
 DSH は同一バッチ内の Bash 呼び出しを順に実行します。旧版は既定のフォアグラウンド待機を 60 秒から 10 分に引き上げていたため、遅いコマンド一つで後続がすべて待たされていました。パッチ #21 はプラグイン印の付いた旧値を公式の 60 秒に戻します。
@@ -480,7 +565,7 @@ node --check lib/core.js
 node --check lib/probe.js
 node --check lib/refusal-retry.js
 
-# 全テスト（163 ケース）
+# 全テスト（197 ケース）
 node --test
 
 # パネル状態（ホスト起動中）
@@ -497,7 +582,7 @@ curl http://127.0.0.1:PORT/dsh-purge/status
 flowchart TB
   subgraph P["① プロンプト層（毎ラウンド）"]
     P1["system-prompt/assemble waterfall"]
-    P2["MERGED-1.1.71 を注入 · 34426 B"]
+    P2["MERGED-1.1.71 を注入 · 20172 文字"]
     P3["probe セクション（probe.json が有効なとき）"]
   end
   subgraph E["② エンジン層（適用時）"]

@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge-nolimit）</h1>
 
-<p align="center"><strong>Version 2.3.32-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.40-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 无限制破甲：无靶场限制、无外挂拦截、无授权弹窗。Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -20,7 +20,7 @@
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-  <img src="https://img.shields.io/badge/tests-163%20passing-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-197%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@
 
 ## dsh-purge-nolimit 插件说明
 
-本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.32），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
+本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.40），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
 
 - 公网 / 私网 / 域名目标全部放行，不再做 IP 范围拦截。
 - 游戏外挂、内存修改、注入、反作弊请求全部放行。
@@ -76,6 +76,14 @@
 | **2.3.30** | 修复探针 section 注册位置 |
 | **2.3.31** | 探针判据改为读会话日志，不依赖模型回显 |
 | **2.3.32** | 修复会话文件大小上限造成的**假阴性** |
+| **2.3.33** | 修复 `#62` 的静默半破；新增 DSML 工具调用守卫；自动续恢复工作 |
+| **2.3.34** | rc.3 全量回归；`#18` 补上 rc.3 锚点 |
+| **2.3.35** | `scripts/selfcheck.mjs` —— 一条命令挡住「全绿但空转」 |
+| **2.3.36** | **移植社区版的工程化能力**：asar handoff、本地重锚、语义验证器、更新子系统、快照回滚、38 层语义分组、补丁表拆分 |
+| **2.3.37** | 一个包同时服务 rc.1 / rc.2 / rc.3（`dshTargets`） |
+| **2.3.38** | 全量探针挖出的三个真 bug：`import` 就执行的脚本入口、永远到不了 `ok` 的三层、`node:sqlite` 的天书报错 |
+| **2.3.39** | `--diagnose --json` 输出纯 JSON |
+| **2.3.40** | 仓库以 rc.1 为准；兼容性数字校正为实测值；`live.versionMatch` 抓「装了没重启」 |
 
 ### 2.2.x 与更早
 
@@ -111,7 +119,7 @@
 
 ## 介绍
 
-**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **2.3.32** 适配 **DSH 0.2.2-rc.1**（0.2.2-rc.2 / rc.3 / rc.5 同样通过）。官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
+**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **2.3.40** 以 **DSH 0.2.2-rc.1** 为主目标，同一个包也覆盖 rc.2 / rc.3。官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
 
 Harness 不只是把问题交给模型。它还会在运行时改提示词、审批门、沙箱和会话格式。只看「模型答不答」，会把宿主拦截误当成模型拒绝。这个插件在你自己的安装里把这两层分开，用来做受控评测，也用来看默认策略该不该收紧。
 
@@ -139,27 +147,40 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 ## 适配范围
 
-**2.3.32 已适配 DSH 0.2.2-rc.1**，0.2.2 的 rc.2 / rc.3 / rc.5 同样通过。
+**2.3.40 以 DSH 0.2.2-rc.1 为主目标**（实测也在这个版本上）；同一个包同时服务 rc.2 与 rc.3
+——补丁表是增量式的，各宿主命中自己那套锚点。
 
 | 宿主版本 | 用哪个版本 |
 | --- | --- |
-| **DSH 0.2.2-rc.1 ～ rc.5** | **2.3.32**（本版） |
+| **DSH 0.2.2-rc.1** | **2.3.40**（主目标） |
+| **DSH 0.2.2-rc.2 / rc.3** | **2.3.40**（`dshTargets` 覆盖） |
 | DSH 0.2.1-rc.x | 2.2.x 或更早 |
 | DSH 0.2.0-rc.2 | 1.1.40+ |
 | DSH 0.1.7（含 rc.1 / rc.2） | 1.1.39 及更早 |
 
 对不上的补丁会显示待应用或跳过，不会乱改文件。
 
-**实测状态**（两台机器，DSH 0.2.2-rc.1）：
+**实测状态**（两台 Windows 桌面，`DSH_SURFACE=desktop`）：
+
+| | DSH 0.2.2-rc.1 | DSH 0.2.2-rc.3 |
+| --- | --- | --- |
+| 面板 | **74/74** | **71/71** |
+| applied | 86 | 81 |
+| na | 0 | 4（`#30 #31 #64 #65` —— hooks 包上游不再随包发） |
+| skipped | 2（`#76 #80`，设计内） | 3（`#56 #76 #80`） |
+| 语义分层 | 38 ok | 38 ok |
+| 破甲自检 | 11/11 | 11/11 |
+| selfcheck | 16 pass / 0 fail | 16 pass / 0 fail |
+| 全量探针 | 76/76 | 76/76 |
 
 ```
-补丁     74/74 applied（applied=86 skipped=2，optional=2）
-破甲自检 11/11
-红队工具 15/15
-单元测试 163/163
-提示词   34426 B  MERGED-1.1.71（三份 SHA256 一致）
+单元测试 197/197
+提示词   20172 字符，加密槽，关键段落齐备
 预设     redteam 28534 B / unrestricted 16078 B，均 toolFilter=0
 ```
+
+rc.1 比 rc.3 多打 5 条：四条 hooks 补丁因为 rc.1 仍随包发 `dsh-hooks-claude-code` /
+`dsh-hooks-codex` 而保留；`#56` 的锚点在 rc.3 上被前端 bundle 重压缩冲掉了。
 
 ---
 
@@ -172,10 +193,10 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 能装的方式只有一个：下载 tarball，然后跑安装脚本。
 
 从 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) 下载
-`dsh-purge-nolimit-2.3.32-dsh022.tar.gz`，和脚本放在同一个目录，然后：
+`dsh-purge-nolimit-2.3.40-dsh022.tar.gz`，和脚本放在同一个目录，然后：
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz
 ```
 
 脚本会走完这些步骤：备份现有配置和插件目录，停宿主，算 tarball 的 SHA512，解压到 `node_modules\dsh-purge`，改 profile 的 `package.json`，改写三份 lockfile，检查 `cordis.patch.yml`，最后把宿主拉起来。
@@ -201,7 +222,16 @@ $port = <宿主端口>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-看到 `plugin=2.3.32-dsh022` 和 `patches=74/74` 就对了。数字不一样的话，点一次「应用」，然后重启。
+rc.1 上看到 `plugin=2.3.40-dsh022` 和 `patches=74/74` 就对了（rc.3 上是 71/71）。
+
+更稳的做法是跑随包自带的自检，它还能挡住面板看不出来的那几类失败：
+
+```powershell
+node node_modules\dsh-purge\scripts\selfcheck.mjs --http --http-port <宿主端口>
+```
+
+退出码 `0` 表示全部通过。`loader.asar_shadow` 抓 `app.asar` 遮住解包目录
+（补丁写了但没被加载）；`live.versionMatch` 抓「装了没重启」。
 
 ### 手工装（脚本跑不了的时候）
 
@@ -216,13 +246,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 然后改 `$prof\package.json`，加两处。`dependencies` 里加一行：
 
 ```json
-"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
+"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.40-dsh022.tar.gz"
 ```
 
 `dsh.profile.bundles` 数组末尾追加 `"dsh-purge"`。
@@ -295,7 +325,15 @@ Releases 里的 tarball 和 GitHub 页面「Download ZIP」拿到的源码包，
 ```
 bin/                 命令行
 lib/                 补丁表、应用引擎、注入、观测、探针
-  core.js            补丁表 ALL_PATCHES（88 条）+ 应用引擎 + targetFiles
+  core.js            应用引擎 + targetFiles（补丁表已拆出）
+  patches/           补丁表模块 —— code(3) / engine(8) / new-tools(67)
+  layers.js          38 层语义分组：哪个限制还没拆掉
+  verifiers.js       #15/#16/#35/#62 的语义验证器 + requireAllTargets
+  anchors.js         本地重锚覆盖（anchor-overrides.json）
+  diagnose.js        锚点漂移诊断，带候选行号
+  windows-asar-handoff.js  等 Electron 完全退出再挪归档
+  macos-asar-handoff.js
+  update-*.js        12 个更新子系统模块（偏好与凭据分开落盘）
   index.js           cordis 插件入口、HTTP 路由、systemPrompt waterfall
   identity.js        身份判定、preset 识别、注入正文改写
   verify.js          飞行记录仪 + 时间线
@@ -307,7 +345,7 @@ lib/                 补丁表、应用引擎、注入、观测、探针
 presets/
   redteam/           红队指挥预设
   unrestricted/      无限制模式（2.3.17+）
-test/                20 个测试文件 / 163 个用例
+test/                25 个测试文件 / 197 个用例
 client.js            侧栏（React，预构建）
 cordis.patch.yml     profile 层的补丁声明
 ```
@@ -423,6 +461,47 @@ atomicCopyFile(src, dst)   // 权限跟着源文件走
 
 ---
 
+### 自检（selfcheck.mjs，2.3.35+）
+
+```bash
+node scripts/selfcheck.mjs                 # 人读
+node scripts/selfcheck.mjs --json          # 机器读
+node scripts/selfcheck.mjs --http --http-port <宿主端口>
+```
+
+只读，退出码 `0` 表示全过。它挡的是面板看不出来的那几类：`app.asar` 遮住解包出来的
+`app/`、rc.3 缺 CLI 启动器、磁盘全绿但内存里是旧版（`live.versionMatch`）、以及补丁不幂等。
+
+### 语义分层（layers.js，2.3.36+）
+
+88 条补丁归成 **38 层**，每层回答的是「哪个限制还卡着」，而不是「这一行改没改」。
+面板据此显示哪一层还待应用、影响是什么；`checkLayerCoverage()` 会在某条补丁不属于任何
+层时直接报错，所以不会有补丁从面板上静默消失。
+
+### 本地重锚（2.3.36+）
+
+宿主升级把锚点改坏时，不用等新版本：
+
+```bash
+dsh-purge --diagnose                                     # 失配的补丁/文件/第几个 anchor + 候选行
+dsh-purge --diagnose --json                              # 纯 JSON
+dsh-purge --reanchor 95 --index 1 --lines 990-1000       # 预览，不写盘
+dsh-purge --reanchor 95 --index 1 --lines 990-1000 --yes # 落地
+dsh-purge --reanchor clear 95                            # 撤销
+```
+
+覆盖存在 `$DSH_HOME/dsh-purge/anchor-overrides.json`，删掉即恢复出厂锚点。
+
+### 语义验证器（verifiers.js，2.3.36+）
+
+marker 只能证明「这一处改过」。所以 `#15/#16/#35/#62` 挂了 `verify(text, fp)`，完全绕开
+marker 判定；另有 `requireAllTargets`，防止「只改中一份就报整条已应用」。
+
+### asar 交接（2.3.36+）
+
+`windows-asar-handoff.js` / `macos-asar-handoff.js` 会等 Electron 完全退出、改名前后各校验
+一次哈希、并且在解包不完整时拒绝改名——这正是「补丁写了」和「补丁被加载」的区别。
+
 ## 响应速度
 
 DSH 会按顺序执行同一批中的 Bash 调用。旧版把默认前台等待从 60 秒提高到 10 分钟，一条慢命令会让后续调用一起等待。补丁 #21 现在把带插件标记的旧值恢复为官方的 60 秒。
@@ -458,7 +537,7 @@ node --check lib/core.js
 node --check lib/probe.js
 node --check lib/refusal-retry.js
 
-# 全量测试（163 个用例）
+# 全量测试（197 个用例）
 node --test
 
 # 面板状态（宿主跑着的时候）
@@ -475,7 +554,7 @@ curl http://127.0.0.1:PORT/dsh-purge/status
 flowchart TB
   subgraph P["① 提示词层（每一轮）"]
     P1["system-prompt/assemble waterfall"]
-    P2["注入 MERGED-1.1.71 · 34426 B"]
+    P2["注入 MERGED-1.1.71 · 20172 字符"]
     P3["probe 段（probe.json 有效时）"]
   end
   subgraph E["② 引擎层（应用时）"]

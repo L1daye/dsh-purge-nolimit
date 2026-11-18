@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness Red-Team Toolkit (dsh-purge-nolimit)</h1>
 
-<p align="center"><strong>Version 2.3.32-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.40-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness, unrestricted: no range gate, no cheat blocking, no approval popups. Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -20,7 +20,7 @@
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-  <img src="https://img.shields.io/badge/tests-163%20passing-brightgreen" alt="tests">
+  <img src="https://img.shields.io/badge/tests-197%20passing-brightgreen" alt="tests">
 </p>
 
 <p align="center">
@@ -48,7 +48,7 @@ Everything below is **removal of gates plus new capability** — no upstream fea
 
 ## About dsh-purge-nolimit
 
-This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.32). It starts from upstream dsh-purge 1.1.82, removes every session gate and approval dialog, and has been iterated on since. Relative to the original:
+This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.40). It starts from upstream dsh-purge 1.1.82, removes every session gate and approval dialog, and has been iterated on since. Relative to the original:
 
 - Public / private / domain targets are all allowed; no IP-range gate.
 - Game cheats, memory modification, injection and anti-cheat bypass are allowed.
@@ -76,6 +76,14 @@ This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.32). It 
 | **2.3.30** | Fixes the probe section registration order |
 | **2.3.31** | Probe verdict reads the session log instead of asking the model |
 | **2.3.32** | Fixes a **false negative** caused by the session size cap |
+| **2.3.33** | Fixes the silent half-break of `#62`; adds the DSML tool-call guard; revives auto-continue |
+| **2.3.34** | Full regression pass on rc.3; `#18` gains its rc.3 anchor |
+| **2.3.35** | `scripts/selfcheck.mjs` — one command catches "all green but inert" |
+| **2.3.36** | **Ports the community fork's engineering**: asar handoff, local re-anchoring, semantic verifiers, update subsystem, snapshot rollback, 38 semantic layers, patch table split |
+| **2.3.37** | One build serves rc.1 / rc.2 / rc.3 (`dshTargets`) |
+| **2.3.38** | Three real bugs found by the full-surface probe: script entry points that ran on `import`, three layers that could never reach `ok`, unreadable `node:sqlite` error |
+| **2.3.39** | `--diagnose --json` emits pure JSON |
+| **2.3.40** | Repo leads with rc.1; measured compatibility numbers; `live.versionMatch` catches a stale running version |
 
 ### 2.2.x and earlier
 
@@ -111,7 +119,7 @@ This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.32). It 
 
 ## What this is
 
-**dsh-purge** is a red-team evaluation plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) installed on your own machine. Version **2.3.32** targets **DSH 0.2.2-rc.1** (rc.2 / rc.3 / rc.5 also pass). Both official **Web** (`dsh web`) and the official **desktop** EXE are supported — installed and applied separately.
+**dsh-purge** is a red-team evaluation plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) installed on your own machine. Version **2.3.40** targets **DSH 0.2.2-rc.1**, and the same build also covers rc.2 / rc.3. Both official **Web** (`dsh web`) and the official **desktop** EXE are supported — installed and applied separately.
 
 Harness does more than hand questions to a model. At runtime it rewrites prompts, approval gates, sandbox rules and session framing. Judging only "did the model answer" conflates host interception with model refusal. This plugin separates those two layers inside your own installation, for controlled evaluation and to see whether the default posture should be tightened.
 
@@ -139,27 +147,42 @@ Commercial and fork licensing: [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md).
 
 ## Supported hosts
 
-**2.3.32 targets DSH 0.2.2-rc.1**; rc.2 / rc.3 / rc.5 of 0.2.2 also pass.
+**2.3.40 targets DSH 0.2.2-rc.1** (the version it is measured on); one build also
+serves rc.2 and rc.3 — the patch table is additive, so each host matches its own
+set of anchors.
 
 | Host | Use |
 | --- | --- |
-| **DSH 0.2.2-rc.1 … rc.5** | **2.3.32** (this release) |
+| **DSH 0.2.2-rc.1** | **2.3.40** (primary target) |
+| **DSH 0.2.2-rc.2 / rc.3** | **2.3.40** (`dshTargets` covers both) |
 | DSH 0.2.1-rc.x | 2.2.x or earlier |
 | DSH 0.2.0-rc.2 | 1.1.40+ |
 | DSH 0.1.7 (incl. rc.1 / rc.2) | 1.1.39 and earlier |
 
 Patches that no longer match show as pending or skipped; they never corrupt files.
 
-**Measured state** (two machines, DSH 0.2.2-rc.1):
+**Measured state** (two Windows desktops, `DSH_SURFACE=desktop`):
+
+| | DSH 0.2.2-rc.1 | DSH 0.2.2-rc.3 |
+| --- | --- | --- |
+| panel | **74/74** | **71/71** |
+| applied | 86 | 81 |
+| na | 0 | 4 (`#30 #31 #64 #65` — the hooks packages are no longer shipped upstream) |
+| skipped | 2 (`#76 #80`, by design) | 3 (`#56 #76 #80`) |
+| semantic layers | 38 ok | 38 ok |
+| armour audit | 11/11 | 11/11 |
+| selfcheck | 16 pass / 0 fail | 16 pass / 0 fail |
+| full-surface probe | 76/76 | 76/76 |
 
 ```
-patches     74/74 applied (applied=86 skipped=2, optional=2)
-armour audit 11/11
-red-team tools 15/15
-unit tests   163/163
-prompt       34426 B  MERGED-1.1.71 (three copies, identical SHA256)
+unit tests   197/197
+prompt       20172 chars, sealed slot, all key sections present
 presets      redteam 28534 B / unrestricted 16078 B, both toolFilter=0
 ```
+
+rc.1 applies five more patches than rc.3: the four hooks patches survive because
+rc.1 still ships `dsh-hooks-claude-code` / `dsh-hooks-codex`, and `#56` keeps its
+anchor (rc.3 recompressed the front-end bundle).
 
 ---
 
@@ -171,12 +194,12 @@ That command makes pnpm re-resolve the whole dependency tree, and `@deepseek-ai/
 
 There is one route that works: download the tarball, then run the install script.
 
-Grab `dsh-purge-nolimit-2.3.32-dsh022.tar.gz` from
+Grab `dsh-purge-nolimit-2.3.40-dsh022.tar.gz` from
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases), put it next to the
 script, and run:
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz
 ```
 
 The script backs up the current config and plugin directory, stops the host, computes
@@ -209,8 +232,17 @@ $port = <host port>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-You want `plugin=2.3.32-dsh022` and `patches=74/74`. If the numbers differ, press Apply
-once and restart.
+You want `plugin=2.3.40-dsh022` and `patches=74/74` on rc.1 (71/71 on rc.3).
+
+Better: run the bundled self-check, which also catches the failures the panel cannot see.
+
+```powershell
+node node_modules\dsh-purge\scripts\selfcheck.mjs --http --http-port <host port>
+```
+
+Exit code `0` means every check passed. `loader.asar_shadow` catches `app.asar`
+shadowing the extracted `app/` (patches written but never loaded); `live.versionMatch`
+catches "installed but not restarted".
 
 ### Manual install (when the script cannot run)
 
@@ -226,13 +258,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 Then edit `$prof\package.json` in two places. Under `dependencies`, add:
 
 ```json
-"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.32-dsh022.tar.gz"
+"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.40-dsh022.tar.gz"
 ```
 
 And append `"dsh-purge"` to the `dsh.profile.bundles` array.
@@ -311,7 +343,15 @@ Scan results sorted by ease of exploitation, filterable by port, fingerprint and
 ```
 bin/                 CLI
 lib/                 patch table, apply engine, injection, observability, probe
-  core.js            ALL_PATCHES (88) + apply engine + targetFiles
+  core.js            apply engine + targetFiles (the patch table moved out)
+  patches/           patch table modules — code (3) / engine (8) / new-tools (67)
+  layers.js          38 semantic layer groups: which limit is still in place
+  verifiers.js       semantic verifiers for #15/#16/#35/#62 + requireAllTargets
+  anchors.js         local anchor overrides (anchor-overrides.json)
+  diagnose.js        anchor drift report with candidate line numbers
+  windows-asar-handoff.js  waits for a full Electron quit before renaming the archive
+  macos-asar-handoff.js
+  update-*.js        12 update-subsystem modules (prefs and credentials kept apart)
   index.js           cordis plugin entry, HTTP routes, systemPrompt waterfall
   identity.js        identity detection, preset recognition, injection rewriting
   verify.js          flight recorder + timeline
@@ -323,7 +363,7 @@ lib/                 patch table, apply engine, injection, observability, probe
 presets/
   redteam/           red-team command preset
   unrestricted/      unrestricted mode (2.3.17+)
-test/                20 test files / 163 cases
+test/                25 test files / 197 cases
 client.js            sidebar (React, prebuilt)
 cordis.patch.yml     profile-level patch declaration
 ```
@@ -438,6 +478,52 @@ Three fixes:
 
 ---
 
+### Self-check (selfcheck.mjs, 2.3.35+)
+
+```bash
+node scripts/selfcheck.mjs                 # human-readable
+node scripts/selfcheck.mjs --json          # machine-readable
+node scripts/selfcheck.mjs --http --http-port <host port>
+```
+
+Read-only; exit code `0` = all passed. It catches the failures the panel cannot see:
+`app.asar` shadowing the extracted `app/`, a missing rc.3 CLI shim, patches that are
+green on disk but stale in memory (`live.versionMatch`), and non-idempotent patches.
+
+### Semantic layers (layers.js, 2.3.36+)
+
+88 patches grouped into **38 layers**, each answering "which limit is still in place"
+rather than "was this line edited". The panel shows which layer is still pending and
+what it costs; `checkLayerCoverage()` throws if a patch belongs to no layer, so nothing
+can silently disappear from the panel.
+
+### Local re-anchoring (2.3.36+)
+
+When a host upgrade breaks an anchor you no longer need a new release:
+
+```bash
+dsh-purge --diagnose                                     # failing patch/file/anchor + candidate lines
+dsh-purge --diagnose --json                              # pure JSON
+dsh-purge --reanchor 95 --index 1 --lines 990-1000       # preview, writes nothing
+dsh-purge --reanchor 95 --index 1 --lines 990-1000 --yes # commit
+dsh-purge --reanchor clear 95                            # undo
+```
+
+Overrides live in `$DSH_HOME/dsh-purge/anchor-overrides.json`; delete it to restore
+the factory anchors.
+
+### Semantic verifiers (verifiers.js, 2.3.36+)
+
+A marker only proves "this one spot was edited". `#15/#16/#35/#62` therefore carry a
+`verify(text, fp)` that bypasses markers entirely, plus `requireAllTargets` so that
+patching one file cannot certify the whole patch.
+
+### asar handoff (2.3.36+)
+
+`windows-asar-handoff.js` / `macos-asar-handoff.js` wait for a full Electron quit,
+verify the archive hash before and after the rename, and refuse to rename unless the
+extracted `app/` is complete — the difference between "patches written" and "patches loaded".
+
 ## Responsiveness
 
 DSH runs Bash calls in a batch sequentially. An older dsh-purge raised the default foreground wait from 60 s to 10 minutes, so one slow command made every later call wait too. Patch #21 restores marked plugin values to the official 60 s.
@@ -473,7 +559,7 @@ node --check lib/core.js
 node --check lib/probe.js
 node --check lib/refusal-retry.js
 
-# Full suite (163 cases)
+# Full suite (197 cases)
 node --test
 
 # Panel status (while the host is running)
@@ -490,7 +576,7 @@ curl http://127.0.0.1:PORT/dsh-purge/status
 flowchart TB
   subgraph P["1. Prompt layer (every round)"]
     P1["system-prompt/assemble waterfall"]
-    P2["injects MERGED-1.1.71 · 34426 B"]
+    P2["injects MERGED-1.1.71 · 20172 chars"]
     P3["probe section (when probe.json is live)"]
   end
   subgraph E["2. Engine layer (on apply)"]
