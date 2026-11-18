@@ -1,3 +1,55 @@
+# 2.3.39
+
+> 2.3.38 之后在**本机 rc.1** 上跑同一套全量探针（76 项）时补的两个小修。
+> 补丁与分层语义没动。
+
+## 中文
+
+- **`--diagnose --json` 之前会先把整段人读状态打到 stdout 再打 JSON**。
+  调用方（脚本、探针）没法直接 `JSON.parse` 整个输出，因为状态列表里到处都是
+  `[#62]` 这种方括号，`indexOf("[")` 会切错位置。现在带 `--json` 时不打印状态块，
+  整个 stdout 就是一段合法 JSON。
+
+- **`update.prefs_public_hides_secrets` 复查通过**（这条是探针断言写错，不是产品问题，
+  但值得记下）：`publicPreferences` 对真 token 的处理是正确的——
+  `githubToken` 恒为空串、只给 `hasGithubToken` 布尔、`proxyUrl` 里的
+  `user:pass@` 被剥掉，且 token 本身落在单独的 `update-channel.json`，
+  不写进 `update-preferences.json`。
+
+- 本机 rc.1 全量探针：**76 pass / 0 fail / 0 warn**，`selfcheck` **14 pass / 0 fail**，
+  分层 **38 层全 ok**，`86 applied / 2 skipped / 0 na`。
+
+### 探针自己修的四处（不是产品问题）
+
+| 现象 | 真相 |
+| --- | --- |
+| `modules.redteam 18/19` | `lib/redteam/client.js` 是浏览器包，`window is not defined` 属正常 |
+| `remove_tree.works` 失败 | `removeTreeNoFollow` 是 **AsyncFunction**，探针没 `await` |
+| `snapshot.listed_after_save {}` | `listSnapshots` / `saveSnapshot` 都是 async；且签名是 `(dshHome, name)` |
+| `http/preflight` 404 | `purge_preflight` / `purge_verify` / `purge_trace` 是**工具**不是 HTTP 端点；真实路由是 `/status` `/audit` `/apply` `/revert` `/probe` `/prompt-snapshots` 等 |
+
+## English
+
+- **`--diagnose --json` used to print the full human status block before the JSON**,
+  so `JSON.parse(stdout)` failed — the status listing is full of `[#62]` brackets and
+  `indexOf("[")` sliced at the wrong place. With `--json` the status block is now
+  suppressed and stdout is a single valid JSON document.
+
+- **`publicPreferences` re-verified as correct**: `githubToken` is always empty,
+  only `hasGithubToken` is exposed, `user:pass@` is stripped from `proxyUrl`, and the
+  token itself lives in `update-preferences.json`'s sibling `update-channel.json`.
+
+- Local rc.1 full probe: **76 pass / 0 fail / 0 warn**; `selfcheck` **14 pass / 0 fail**;
+  layers **38 ok**; `86 applied / 2 skipped / 0 na`.
+
+### Four probe bugs fixed (not product issues)
+
+`client.js` is a browser bundle; `removeTreeNoFollow` and `listSnapshots`/`saveSnapshot`
+are async (the latter takes `(dshHome, name)`); `purge_preflight`/`purge_verify`/
+`purge_trace` are tools, not HTTP routes.
+
+---
+
 # 2.3.38
 
 > 这一版是**在远程 rc.3 上跑全量探针跑出来的**，不是计划内的工作。

@@ -153,8 +153,12 @@ async function main() {
   }
 
   const state = await core.gatherState();
-  console.log(printStatus(state));
-  console.log("");
+  // --json 是给机器读的：不能先泼一段人读的状态再打 JSON，
+  // 否则调用方（脚本、探针）没法直接 JSON.parse 整个 stdout。
+  if (!args.includes("--json")) {
+    console.log(printStatus(state));
+    console.log("");
+  }
 
   if (mode === "--apply") {
     if (!state.ai_base) {
