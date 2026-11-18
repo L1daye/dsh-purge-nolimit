@@ -14,6 +14,7 @@ The `-dsh022` suffix means the build targets DeepSeek Harness 0.2.2.
 
 | Version | Summary |
 | --- | --- |
+| [2.3.41](./release-notes.md) | version-pinned `dsh.install.tarball`/`zip` URLs; seven-step release checklist |
 | [2.3.40](./release-notes.md) | repo leads with rc.1; measured compatibility numbers; `live.versionMatch` catches a stale running version |
 | [2.3.39](./release-notes.md) | `--diagnose --json` emits pure JSON |
 | [2.3.38](./release-notes.md) | three real bugs from the full-surface probe: script entry points that ran on `import`, three layers that could never reach `ok`, unreadable `node:sqlite` error |

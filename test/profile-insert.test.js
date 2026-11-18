@@ -12,7 +12,12 @@ import {
   ensurePnpmAllowBuild,
 } from "../lib/profile-insert.js";
 
-const MASTER_URL = "https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main";
+// 从 package.json 读，不要在测试里硬编码：purgePnpmBuildSpecs() 的兜底就是读它，
+// 写死旧地址会在发版把 dsh.install.tarball 换成 release 资产后立刻失败（2.3.41 踩过）。
+const PKG = JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const MASTER_URL = String(PKG.dsh.install.tarball);
+// 历史 lock 里可能残留的旧地址：只用于"如实保留"这一类断言，与当前 package.json 无关。
+const LEGACY_URL = "https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main";
 const COMMIT_URL = "https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/abc1234567890";
 
 function withTempProfile(lockText) {
@@ -143,18 +148,20 @@ test("lock 读不到（旧 tarball 记录 / 无文件）退回 package.json tarb
   // 无 pnpm-lock.yaml 的临时目录 → 只用裸包名兜底逻辑应落到 package.json 的 tarball URL
   const dir = withTempProfile();
   assert.deepEqual(purgePnpmBuildSpecs(dir), ["dsh-purge", `dsh-purge@${MASTER_URL}`]);
-  // lock 里 specifier 写死旧地址，也如实保留
+  // lock 里 specifier 写死旧地址：builds 键必须跟着 lock 走，不能换成 package.json 的
+  // 新地址——否则 pnpm 会认为这是另一个包，allowBuilds 里出现两个键。
+  // （2.3.41 之前 MASTER_URL 与 LEGACY_URL 恰好同值，这条断言其实分辨不出两种行为。）
   const dir2 = withTempProfile([
     "importers:",
     "",
     "  .:",
     "    dependencies:",
     "      dsh-purge:",
-    "        specifier: https://codeload.github.com/L1daye/dsh-purge-nolimit/tar.gz/refs/heads/main",
+    `        specifier: ${LEGACY_URL}`,
     "        version: '1.1.81'",
     "",
   ].join("\n"));
-  assert.deepEqual(purgePnpmBuildSpecs(dir2), ["dsh-purge", `dsh-purge@${MASTER_URL}`]);
+  assert.deepEqual(purgePnpmBuildSpecs(dir2), ["dsh-purge", `dsh-purge@${LEGACY_URL}`]);
 });
 
 test("固定 commit 安装：重写后过期 tarball 键被换成 commit 键", () => {

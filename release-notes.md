@@ -1,3 +1,34 @@
+# 2.3.41
+
+> 修一个发出去的元数据缺陷：`package.json` 里 `dsh.install.tarball` 指向
+> `codeload.github.com/.../refs/heads/main`，也就是**移动的分支源码**。
+> `lib/profile-insert.js` 的 `readPkgTarball()` 会把它写成 profile 的安装 specifier——
+> 版本号写着 2.3.40，装出来的内容却随 main 漂移。
+
+## 中文
+
+- `dsh.install.tarball` → 版本化的 release 资产：
+  `.../releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz`
+- `dsh.install.zip` → tag 归档：`.../archive/refs/tags/v2.3.41-dsh022.zip`
+  （原来是 `refs/heads/main`，同样是移动的）
+- AGENTS.md §5.1 从「改版本号」升级成七步发版清单，写清了 `dsh.install`
+  为什么必须跟着版本一起改、以及发版顺序。
+
+补丁与提示词语义零改动，行为与 2.3.40 完全一致。
+
+## English
+
+- `dsh.install.tarball` now points at the versioned release asset instead of the
+  moving `refs/heads/main` source archive; `readPkgTarball()` in
+  `lib/profile-insert.js` writes that value into the profile's install specifier,
+  so a moving URL meant "version says 2.3.40, content follows main".
+- `dsh.install.zip` now points at the tag archive for the same reason.
+- AGENTS.md §5.1 became a seven-step release checklist.
+
+No patch or prompt semantics changed; behaviour is identical to 2.3.40.
+
+---
+
 # 2.3.40
 
 > 仓库权威版本对齐。**主目标 `dshTarget` = `0.2.2-rc.1`**（本机在用的版本），

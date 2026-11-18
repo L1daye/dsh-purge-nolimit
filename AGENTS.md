@@ -1217,16 +1217,39 @@ status 里同时给两个字段，语义不同别混用：
 
 ## 5. 发布流程
 
-### 5.1 改版本号
+### 5.1 改版本号（三处一起改，别只改 version）
 
-```bash
-# package.json
-"version": "<ver>-dsh022"
+```json
+"version": "2.3.41-dsh022",
+"dsh": {
+  "install": {
+    "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz",
+    "zip":     "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.41-dsh022.zip"
+  }
+}
 ```
 
 **版本号规则**：`<主>.<次>.<修订>-dsh<宿主次版本>`
 
 `-dsh022` 表示针对 DSH 0.2.2。
+
+**为什么 `dsh.install` 必须一起改**：`lib/profile-insert.js` 的 `readPkgTarball()`
+读的就是这个字段，会把它写进 profile 的安装 specifier。指向
+`codeload.github.com/.../refs/heads/main` 意味着每次安装拉的是**当时的分支源码**，
+不是发出去、测过的那份包——版本号写着 2.3.41，装出来的内容随 main 漂移。
+所以两处必须是**版本化的 release 资产 URL**。
+
+发版顺序（顺序错了会指向还不存在的资产，但 GitHub 允许先建 release 不留资产，所以：
+
+```
+1. 改 version + dsh.install（两处 URL 都指向即将发布的 tag）
+2. npm test  /  selfcheck
+3. git commit + push
+4. git tag -a v<ver>-dsh022  &&  git push origin v<ver>-dsh022
+5. 建 release，上传 dsh-purge-nolimit-<ver>-dsh022.tar.gz 与 redteam-tools-20.tar.gz
+6. 用资产 digest 核对本地 sha256
+7. 装到本机 + selfcheck
+```
 
 ### 5.2 打包
 

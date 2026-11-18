@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness Red-Team Toolkit (dsh-purge-nolimit)</h1>
 
-<p align="center"><strong>Version 2.3.40-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.41-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness, unrestricted: no range gate, no cheat blocking, no approval popups. Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -48,7 +48,7 @@ Everything below is **removal of gates plus new capability** — no upstream fea
 
 ## About dsh-purge-nolimit
 
-This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.40). It starts from upstream dsh-purge 1.1.82, removes every session gate and approval dialog, and has been iterated on since. Relative to the original:
+This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.41). It starts from upstream dsh-purge 1.1.82, removes every session gate and approval dialog, and has been iterated on since. Relative to the original:
 
 - Public / private / domain targets are all allowed; no IP-range gate.
 - Game cheats, memory modification, injection and anti-cheat bypass are allowed.
@@ -83,6 +83,7 @@ This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.40). It 
 | **2.3.37** | One build serves rc.1 / rc.2 / rc.3 (`dshTargets`) |
 | **2.3.38** | Three real bugs found by the full-surface probe: script entry points that ran on `import`, three layers that could never reach `ok`, unreadable `node:sqlite` error |
 | **2.3.39** | `--diagnose --json` emits pure JSON |
+| **2.3.41** | Version-pinned `tarball`/`zip` URLs (they used to follow the branch); seven-step release checklist |
 | **2.3.40** | Repo leads with rc.1; measured compatibility numbers; `live.versionMatch` catches a stale running version |
 
 ### 2.2.x and earlier
@@ -119,7 +120,7 @@ This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.40). It 
 
 ## What this is
 
-**dsh-purge** is a red-team evaluation plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) installed on your own machine. Version **2.3.40** targets **DSH 0.2.2-rc.1**, and the same build also covers rc.2 / rc.3. Both official **Web** (`dsh web`) and the official **desktop** EXE are supported — installed and applied separately.
+**dsh-purge** is a red-team evaluation plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) installed on your own machine. Version **2.3.41** targets **DSH 0.2.2-rc.1**, and the same build also covers rc.2 / rc.3. Both official **Web** (`dsh web`) and the official **desktop** EXE are supported — installed and applied separately.
 
 Harness does more than hand questions to a model. At runtime it rewrites prompts, approval gates, sandbox rules and session framing. Judging only "did the model answer" conflates host interception with model refusal. This plugin separates those two layers inside your own installation, for controlled evaluation and to see whether the default posture should be tightened.
 
@@ -147,14 +148,14 @@ Commercial and fork licensing: [LICENSE-COMMERCIAL.md](./LICENSE-COMMERCIAL.md).
 
 ## Supported hosts
 
-**2.3.40 targets DSH 0.2.2-rc.1** (the version it is measured on); one build also
+**2.3.41 targets DSH 0.2.2-rc.1** (the version it is measured on); one build also
 serves rc.2 and rc.3 — the patch table is additive, so each host matches its own
 set of anchors.
 
 | Host | Use |
 | --- | --- |
-| **DSH 0.2.2-rc.1** | **2.3.40** (primary target) |
-| **DSH 0.2.2-rc.2 / rc.3** | **2.3.40** (`dshTargets` covers both) |
+| **DSH 0.2.2-rc.1** | **2.3.41** (primary target) |
+| **DSH 0.2.2-rc.2 / rc.3** | **2.3.41** (`dshTargets` covers both) |
 | DSH 0.2.1-rc.x | 2.2.x or earlier |
 | DSH 0.2.0-rc.2 | 1.1.40+ |
 | DSH 0.1.7 (incl. rc.1 / rc.2) | 1.1.39 and earlier |
@@ -194,12 +195,12 @@ That command makes pnpm re-resolve the whole dependency tree, and `@deepseek-ai/
 
 There is one route that works: download the tarball, then run the install script.
 
-Grab `dsh-purge-nolimit-2.3.40-dsh022.tar.gz` from
+Grab `dsh-purge-nolimit-2.3.41-dsh022.tar.gz` from
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases), put it next to the
 script, and run:
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.41-dsh022.tar.gz
 ```
 
 The script backs up the current config and plugin directory, stops the host, computes
@@ -232,7 +233,7 @@ $port = <host port>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-You want `plugin=2.3.40-dsh022` and `patches=74/74` on rc.1 (71/71 on rc.3).
+You want `plugin=2.3.41-dsh022` and `patches=74/74` on rc.1 (71/71 on rc.3).
 
 Better: run the bundled self-check, which also catches the failures the panel cannot see.
 
@@ -258,13 +259,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.40-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.41-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 Then edit `$prof\package.json` in two places. Under `dependencies`, add:
 
 ```json
-"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.40-dsh022.tar.gz"
+"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.41-dsh022.tar.gz"
 ```
 
 And append `"dsh-purge"` to the `dsh.profile.bundles` array.
