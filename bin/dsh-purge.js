@@ -141,7 +141,7 @@ async function main() {
 
   if (mode === "--help" || args.includes("-h")) {
     console.log(`dsh-purge 用法:
-  dsh-purge --status     显示状态
+  dsh-purge --status     显示状态（加 --json 输出结构化版本）
   dsh-purge --apply      应用全部清洗（提示词+代码+shim+override）
   dsh-purge --revert     回滚还原
   dsh-purge --uninstall  卸载插件（已应用则先还原）
@@ -247,8 +247,14 @@ async function main() {
     await runDiagnose(state, args.includes("--json"));
   } else if (mode === "--reanchor") {
     await runReanchor(state, args);
+  } else if (mode === "--status") {
+    // 人读版已经由上面的 printStatus 打过；--json 时补一份结构化版本。
+    // 之前 --status 没有独立分支，掉进最后的 else，于是 `--status --json`
+    // 只输出一句「默认不清洗」，机器读不到任何东西。
+    if (args.includes("--json")) process.stdout.write(`${JSON.stringify(state, null, 2)}\n`);
   } else {
-    console.log("默认不清洗，使用 --apply 应用清洗。");
+    if (args.includes("--json")) process.stdout.write(`${JSON.stringify(state, null, 2)}\n`);
+    else console.log("默认不清洗，使用 --apply 应用清洗。");
   }
 }
 

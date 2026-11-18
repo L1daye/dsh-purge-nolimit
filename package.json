@@ -1,6 +1,6 @@
 {
   "name": "dsh-purge",
-  "version": "2.3.41-dsh022",
+  "version": "2.3.42-dsh022",
   "description": "DeepSeek Harness 全量破甲版：无靶场限制、无外挂拦截、无授权弹窗。88 条宿主补丁 + 提示词注入 + 无限制预设 + 拒绝重试 + 注入探针。Jailbreak for every model — full-unrestricted build.",
   "type": "module",
   "main": "lib/index.js",
@@ -32,7 +32,12 @@
     "README.md",
     "README.zh-CN.md",
     "LICENSE",
-    "NOTICE"
+    "NOTICE",
+    "LICENSE-COMMERCIAL.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "README.ja.md",
+    "release-notes.md"
   ],
   "scripts": {
     "embed-prompt": "node scripts/embed-default-prompt.mjs",
@@ -81,8 +86,8 @@
     },
     "install": {
       "preferred": "tarball",
-      "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz",
-      "zip": "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.41-dsh022.zip",
+      "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.42-dsh022/dsh-purge-nolimit-2.3.42-dsh022.tar.gz",
+      "zip": "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.42-dsh022.zip",
       "git": "https://github.com/L1daye/dsh-purge-nolimit.git"
     }
   },

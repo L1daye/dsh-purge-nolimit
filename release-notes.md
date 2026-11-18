@@ -1,3 +1,109 @@
+# 2.3.42
+
+## 中文
+
+### 缺陷
+
+打包清单与文件系统不一致，三处：
+
+1. `package.json` 的 `files` 未包含 `LICENSE-COMMERCIAL.md`、`CHANGELOG.md`、
+   `SECURITY.md`、`README.ja.md`、`release-notes.md`。三份 README 都链到
+   `./LICENSE-COMMERCIAL.md`，经由 npm 安装的包里该链接指向不存在的文件，
+   商业授权条款也不随包分发。
+2. 手工打包命令对整个 `lib/` 目录打包，把 `lib/default-prompt-inject.md` 也带了进去。
+   `files` 用 `!lib/default-prompt-inject.md` 排除它，于是两条安装路线（手工 tarball
+   与 npm）产出的文件集不同。
+3. `dsh-purge --status --json` 不输出 JSON。`--status` 没有独立分支，落入最后的
+   else，只打印一句「默认不清洗，使用 --apply 应用清洗。」
+
+### 变更
+
+`files` 补齐上述五个文件，共 19 项。
+
+打包改为与 `files` 对齐，并用 `--exclude` 排除 `lib/default-prompt-inject.md`。
+校验方式：
+
+```bash
+npm pack --dry-run --json     # 163 个文件
+tar -tzf out.tar.gz           # 163 个文件，与上一行逐路径一致
+```
+
+CLI 增加 `--status` 分支：带 `--json` 时输出 `gatherState()` 的完整 JSON（15402 字节），
+不带时行为不变。无动作时带 `--json` 同样输出该 JSON。
+
+`lib/default-prompt-inject.md` 仍被排除，语言变体 `.zh.md` / `.en.md` 照常随包。
+`readBundledPrompt()` 的查找顺序是「对应语言 → 通用 .md → 另一语言」，通用件缺失时
+落到语言变体，默认提示词照常可得。加密槽作为兜底仍然可用：在临时副本中删除三个 md
+后，`defaultOverrideText()` 仍返回 20172 字符，内容与 md 逐字节相同。
+
+### 影响范围
+
+补丁表、提示词槽、语义分层与运行时行为未改动。DSH 0.2.2-rc.1 上的补丁状态与 2.3.41
+相同：applied 86 / skipped 2 / na 0，面板 74/74，破甲审计 11/11。
+
+### 测试
+
+197 项全部通过。新增的第二轮探针覆盖此前未测的面：`--json` 输出纯度、
+`selfcheck --json` 的字段与唯一性、HTTP 未知路由 / 方法不允许 / 畸形请求体 /
+长查询 / 路径穿越、`--reanchor` 的预览-落地-清除全周期、含中文与空格的主目录、
+同一主目录上的 60 次并发写、README 链接与 `files` 的一致性。
+
+## English
+
+### Defect
+
+The packaging manifest disagreed with the file system in three places:
+
+1. `files` omitted `LICENSE-COMMERCIAL.md`, `CHANGELOG.md`, `SECURITY.md`,
+   `README.ja.md` and `release-notes.md`. All three READMEs link to
+   `./LICENSE-COMMERCIAL.md`, so an npm-installed package carried a dead link and
+   did not ship the commercial-licensing terms.
+2. The manual packaging command archived the whole `lib/` directory, including
+   `lib/default-prompt-inject.md`, which `files` excludes via
+   `!lib/default-prompt-inject.md`. The two install routes therefore produced
+   different file sets.
+3. `dsh-purge --status --json` emitted no JSON. `--status` had no branch of its
+   own and fell through to the final else, printing only "默认不清洗，使用 --apply 应用清洗。"
+
+### Change
+
+`files` now lists the five missing entries (19 total).
+
+Packaging is aligned with `files` and excludes `lib/default-prompt-inject.md`:
+
+```bash
+npm pack --dry-run --json     # 163 files
+tar -tzf out.tar.gz           # 163 files, identical path set
+```
+
+The CLI gains a `--status` branch: with `--json` it emits the full
+`gatherState()` document (15402 bytes); without it, behaviour is unchanged. With
+no mode at all, `--json` emits the same document.
+
+`lib/default-prompt-inject.md` stays excluded; the language variants `.zh.md` and
+`.en.md` still ship. `readBundledPrompt()` tries the matching language, then the
+generic `.md`, then the other language, so the default prompt resolves from the
+variants. The sealed slot remains a working fallback: deleting all three markdown
+files in a temporary copy still yields 20172 characters from
+`defaultOverrideText()`, byte-identical to the markdown.
+
+### Scope
+
+The patch table, prompt slot, semantic layers and runtime behaviour are unchanged.
+Patch state on DSH 0.2.2-rc.1 matches 2.3.41: applied 86 / skipped 2 / na 0,
+panel 74/74, armour audit 11/11.
+
+### Tests
+
+All 197 tests pass. A second probe round covers ground the earlier suites did not:
+`--json` output purity, the `selfcheck --json` schema and field uniqueness, HTTP
+unknown route / method not allowed / malformed body / long query / path traversal,
+the full `--reanchor` preview-commit-clear cycle, a home directory containing
+Chinese characters and spaces, 60 concurrent writes against one home, and
+consistency between README links and `files`.
+
+---
+
 # 2.3.41
 
 ## 中文

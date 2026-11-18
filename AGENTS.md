@@ -1220,11 +1220,11 @@ status 里同时给两个字段，语义不同别混用：
 ### 5.1 改版本号（三处一起改，别只改 version）
 
 ```json
-"version": "2.3.41-dsh022",
+"version": "2.3.42-dsh022",
 "dsh": {
   "install": {
-    "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz",
-    "zip":     "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.41-dsh022.zip"
+    "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.42-dsh022/dsh-purge-nolimit-2.3.42-dsh022.tar.gz",
+    "zip":     "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.42-dsh022.zip"
   }
 }
 ```
@@ -1236,7 +1236,7 @@ status 里同时给两个字段，语义不同别混用：
 **为什么 `dsh.install` 必须一起改**：`lib/profile-insert.js` 的 `readPkgTarball()`
 读的就是这个字段，会把它写进 profile 的安装 specifier。指向
 `codeload.github.com/.../refs/heads/main` 意味着每次安装拉的是**当时的分支源码**，
-不是发出去、测过的那份包——版本号写着 2.3.41，装出来的内容随 main 漂移。
+不是发出去、测过的那份包——版本号写着 2.3.42，装出来的内容随 main 漂移。
 所以两处必须是**版本化的 release 资产 URL**。
 
 发版顺序（顺序错了会指向还不存在的资产，但 GitHub 允许先建 release 不留资产，所以：
@@ -1253,26 +1253,40 @@ status 里同时给两个字段，语义不同别混用：
 
 ### 5.2 打包
 
+**唯一标准是 `package.json` 的 `files`。** 打出来的包必须与 `npm pack` 逐路径一致，
+否则两条安装路线（手工 tarball / npm）会产出不同的文件集——2.3.41 之前就是这样。
+
 ```bash
-# 用显式清单，不要用 --exclude。
-# GNU tar 的 --exclude 是未锚定的路径片段匹配：--exclude=patches 会连
-# lib/patches/ 一起排掉（2.3.36 踩过，装上去 lib/patches 缺失、core.js 直接导入失败）。
 tar -czf dsh-purge-nolimit-<ver>-dsh022.tar.gz -C dsh-purge-nolimit \
+  --exclude='lib/default-prompt-inject.md' \
   package.json client.js cordis.patch.yml lib bin presets docs scripts \
   screenshots.json README.md README.zh-CN.md README.ja.md \
-  LICENSE LICENSE-COMMERCIAL.md NOTICE CHANGELOG.md AGENTS.md SECURITY.md .npmignore
+  LICENSE LICENSE-COMMERCIAL.md NOTICE CHANGELOG.md SECURITY.md \
+  release-notes.md AGENTS.md
 ```
 
-**包内必须包含**：`lib/`（含 `lib/patches/`）、`client.js`、`presets/`、`scripts/`、`cordis.patch.yml`。
+两个容易踩的点：
 
-**打完必须验**：
+- **必须用显式清单，不要靠 `--exclude` 兜底。** GNU tar 的 `--exclude` 是未锚定的
+  路径片段匹配：`--exclude=patches` 会连 `lib/patches/` 一起排掉（2.3.36 踩过，
+  装上去 `lib/patches` 缺失、`core.js` 直接导入失败）。
+- **`lib/default-prompt-inject.md` 要排除，`.zh.md` / `.en.md` 要留。**
+  `files` 里写的是 `!lib/default-prompt-inject.md`（只排裸的），语言变体照常随包。
+  裸件是 `scripts/embed-default-prompt.mjs` 封槽时的源文件，不是运行时必需品：
+  `readBundledPrompt()` 的顺序是「对应语言 → 裸 .md → 另一语言」，语言变体在就轮不到它。
+  加密槽仍是兜底——临时副本里删掉三个 md，`defaultOverrideText()` 照样返回 20172 字符。
+
+**打完必须验两条**：
 
 ```bash
-tar -tzf out.tar.gz | grep -c '^lib/patches/'    # 必须是 5（目录 + 4 个 mjs）
+npm pack --dry-run --json | jq '.[0].files | length'    # 期望 163
+tar -tzf out.tar.gz | wc -l                            # 必须相同
+tar -tzf out.tar.gz | grep -c '^lib/patches/'          # 必须是 5（目录 + 4 个 mjs）
 ```
 
-**不能包含**：`lib/default-prompt-inject.md`（`files` 里用 `!` 排除，
-提示词走加密的 `asset-table.js` 通道）。
+**`files` 自身也要维护**：README 里 `](./xxx)` 形式的本地链接，目标文件必须在
+`files` 覆盖范围内，否则 npm 装出来的包里是死链（2.3.42 修了一处：`LICENSE-COMMERCIAL.md`
+被三份 README 链接却不在 `files` 里，商业授权条款因此没有随包分发）。
 
 ### 5.3 两条安装路线
 

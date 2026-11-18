@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge-nolimit）</h1>
 
-<p align="center"><strong>Version 2.3.41-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.42-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 无限制破甲：无靶场限制、无外挂拦截、无授权弹窗。Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -48,7 +48,7 @@
 
 ## dsh-purge-nolimit 插件说明
 
-本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.41），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
+本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.42），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
 
 - 公网 / 私网 / 域名目标全部放行，不再做 IP 范围拦截。
 - 游戏外挂、内存修改、注入、反作弊请求全部放行。
@@ -85,6 +85,7 @@
 | **2.3.39** | `--diagnose --json` 输出纯 JSON |
 | **2.3.40** | 仓库以 rc.1 为准；兼容性数字校正为实测值；`live.versionMatch` 抓「装了没重启」 |
 | **2.3.41** | `tarball`/`zip` 地址改为版本固定（原来跟着分支走）；发版清单扩到七步 |
+| **2.3.42** | 打包清单与文件系统对齐：补回 5 个漏项、排除裸提示词 `.md`，tarball 与 `npm pack` 产出同一份 163 个文件；`--status --json` 输出结构化状态 |
 
 ### 2.2.x 与更早
 
@@ -120,7 +121,7 @@
 
 ## 介绍
 
-**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **2.3.41** 以 **DSH 0.2.2-rc.1** 为主目标，同一个包也覆盖 rc.2 / rc.3。官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
+**dsh-purge** 是装在本机官方 [DeepSeek Harness](https://www.deepseek.com/harness/) 上的网络安全红队评测插件。当前 **2.3.42** 以 **DSH 0.2.2-rc.1** 为主目标，同一个包也覆盖 rc.2 / rc.3。官方 **Web**（`dsh web`）和官方 **桌面端**（EXE）都支持，两边分开装、分开应用。
 
 Harness 不只是把问题交给模型。它还会在运行时改提示词、审批门、沙箱和会话格式。只看「模型答不答」，会把宿主拦截误当成模型拒绝。这个插件在你自己的安装里把这两层分开，用来做受控评测，也用来看默认策略该不该收紧。
 
@@ -148,13 +149,13 @@ Harness 不只是把问题交给模型。它还会在运行时改提示词、审
 
 ## 适配范围
 
-**2.3.41 以 DSH 0.2.2-rc.1 为主目标**（实测也在这个版本上）；同一个包同时服务 rc.2 与 rc.3
+**2.3.42 以 DSH 0.2.2-rc.1 为主目标**（实测也在这个版本上）；同一个包同时服务 rc.2 与 rc.3
 ——补丁表是增量式的，各宿主命中自己那套锚点。
 
 | 宿主版本 | 用哪个版本 |
 | --- | --- |
-| **DSH 0.2.2-rc.1** | **2.3.41**（主目标） |
-| **DSH 0.2.2-rc.2 / rc.3** | **2.3.41**（`dshTargets` 覆盖） |
+| **DSH 0.2.2-rc.1** | **2.3.42**（主目标） |
+| **DSH 0.2.2-rc.2 / rc.3** | **2.3.42**（`dshTargets` 覆盖） |
 | DSH 0.2.1-rc.x | 2.2.x 或更早 |
 | DSH 0.2.0-rc.2 | 1.1.40+ |
 | DSH 0.1.7（含 rc.1 / rc.2） | 1.1.39 及更早 |
@@ -194,10 +195,10 @@ rc.1 比 rc.3 多打 5 条：四条 hooks 补丁因为 rc.1 仍随包发 `dsh-ho
 能装的方式只有一个：下载 tarball，然后跑安装脚本。
 
 从 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) 下载
-`dsh-purge-nolimit-2.3.41-dsh022.tar.gz`，和脚本放在同一个目录，然后：
+`dsh-purge-nolimit-2.3.42-dsh022.tar.gz`，和脚本放在同一个目录，然后：
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.41-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.42-dsh022.tar.gz
 ```
 
 脚本会走完这些步骤：备份现有配置和插件目录，停宿主，算 tarball 的 SHA512，解压到 `node_modules\dsh-purge`，改 profile 的 `package.json`，改写三份 lockfile，检查 `cordis.patch.yml`，最后把宿主拉起来。
@@ -223,7 +224,7 @@ $port = <宿主端口>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-rc.1 上看到 `plugin=2.3.41-dsh022` 和 `patches=74/74` 就对了（rc.3 上是 71/71）。
+rc.1 上看到 `plugin=2.3.42-dsh022` 和 `patches=74/74` 就对了（rc.3 上是 71/71）。
 
 更稳的做法是跑随包自带的自检，它还能挡住面板看不出来的那几类失败：
 
@@ -247,13 +248,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.41-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.42-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 然后改 `$prof\package.json`，加两处。`dependencies` 里加一行：
 
 ```json
-"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.41-dsh022.tar.gz"
+"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.42-dsh022.tar.gz"
 ```
 
 `dsh.profile.bundles` 数组末尾追加 `"dsh-purge"`。
