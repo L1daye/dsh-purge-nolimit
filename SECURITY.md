@@ -16,7 +16,7 @@ exploited before a fix ships.
 
 Useful in a report:
 
-- the version (`/purge status` prints it)
+- the version (`dsh-purge --status` prints it)
 - host version and OS
 - what you did, what happened, what you expected
 - if it involves a patched file, the relevant diff

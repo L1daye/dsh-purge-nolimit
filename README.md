@@ -363,7 +363,7 @@ lib/                 patch table, apply engine, injection, observability, probe
 presets/
   redteam/           red-team command preset
   unrestricted/      unrestricted mode (2.3.17+)
-test/                25 test files / 197 cases
+test/                24 test files / 197 cases
 client.js            sidebar (React, prebuilt)
 cordis.patch.yml     profile-level patch declaration
 ```

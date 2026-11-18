@@ -370,7 +370,7 @@ lib/                 パッチ表、適用エンジン、注入、観測、プ�
 presets/
   redteam/           レッドチーム指揮プリセット
   unrestricted/      無制限モード（2.3.17+）
-test/                25 ファイル / 197 ケース
+test/                24 ファイル / 197 ケース
 client.js            サイドバー（React、ビルド済み）
 cordis.patch.yml     profile 層のパッチ宣言
 ```

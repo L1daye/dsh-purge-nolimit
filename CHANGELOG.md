@@ -14,6 +14,14 @@ The `-dsh022` suffix means the build targets DeepSeek Harness 0.2.2.
 
 | Version | Summary |
 | --- | --- |
+| [2.3.40](./release-notes.md) | repo leads with rc.1; measured compatibility numbers; `live.versionMatch` catches a stale running version |
+| [2.3.39](./release-notes.md) | `--diagnose --json` emits pure JSON |
+| [2.3.38](./release-notes.md) | three real bugs from the full-surface probe: script entry points that ran on `import`, three layers that could never reach `ok`, unreadable `node:sqlite` error |
+| [2.3.37](./release-notes.md) | one build serves rc.1 / rc.2 / rc.3 (`dshTargets`) |
+| [2.3.36](./release-notes.md) | port the community fork's engineering: asar handoff, local re-anchoring, semantic verifiers, update subsystem, snapshot rollback, 38 semantic layers, patch table split |
+| [2.3.35](./release-notes.md) | new: `scripts/selfcheck.mjs` — one command catches "all green but inert" |
+| [2.3.34](./release-notes.md) | full regression pass on rc.3; `#18` gains its rc.3 anchor |
+| [2.3.33](./release-notes.md) | fix the silent half-break of `#62`; add the DSML tool-call guard; revive auto-continue |
 | [2.3.32](./release-notes.md) | probe: fix a false negative when a session file exceeds the size cap |
 | [2.3.31](./release-notes.md) | probe: read the verdict from the session log instead of asking the model |
 | [2.3.30](./release-notes.md) | probe: register the section before the postPrompt early-return |

@@ -345,7 +345,7 @@ lib/                 补丁表、应用引擎、注入、观测、探针
 presets/
   redteam/           红队指挥预设
   unrestricted/      无限制模式（2.3.17+）
-test/                25 个测试文件 / 197 个用例
+test/                24 个测试文件 / 197 个用例
 client.js            侧栏（React，预构建）
 cordis.patch.yml     profile 层的补丁声明
 ```

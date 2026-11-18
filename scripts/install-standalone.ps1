@@ -35,7 +35,7 @@
     Report what would happen, change nothing.
 
 .EXAMPLE
-    .\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+    .\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-<ver>-dsh022.tar.gz
 
 .EXAMPLE
     .\install-standalone.ps1 -Tarball D:\dl\pkg.tar.gz -Profile web -DryRun

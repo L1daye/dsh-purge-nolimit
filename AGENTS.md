@@ -23,16 +23,16 @@ dsh-purge 是 **DeepSeek Harness** 的插件。它做两件事：
 
 ```
 lib/
-  core.js              214 KB  应用引擎 + 状态采集 + targetFiles（补丁表已拆出）
+  core.js              209 KB  应用引擎 + 状态采集 + targetFiles（补丁表已拆出）
   patches/             补丁表模块（2.3.36 拆分，ALL_PATCHES 逐字节等价比对通过）
     code.mjs                3 条   agent-loop / 消息流
     engine.mjs              8 条   沙箱 / 审批 / 文件系统
     new-tools.mjs          67 条   工具描述与 schema（最大的一块）
     shared.mjs              —     new-tools 与 core 共用的两个字符串常量
     index.mjs               —     模块入口与「新补丁该放哪」的指引
-  index.js             126 KB  cordis 插件入口、HTTP 路由、systemPrompt waterfall
+  index.js             153 KB  cordis 插件入口、HTTP 路由、systemPrompt waterfall
   identity.js           41 KB   身份判定、preset 识别、注入正文改写
-  layers.js             ~9 KB   38 层语义分组（哪层没达标 + 影响是什么）
+  layers.js             ~10 KB  38 层语义分组（哪层没达标 + 影响是什么）
   verifiers.js          ~7 KB   语义验证器（#15/#16/#35/#62，绕开 marker 判定）
   anchors.js            ~3 KB   本地重锚覆盖 anchor-overrides.json
   diagnose.js           ~5 KB   锚点漂移诊断（候选行号）
@@ -208,7 +208,7 @@ node --check lib/redteam/index.js
 Invoke-RestMethod http://127.0.0.1:<port>/dsh-purge/status
 
 # 输出
-plugin=2.3.19-dsh022  patches=74/74  optional=2
+plugin=<ver>-dsh022  patches=74/74  optional=2
 patch_status: { "1": "applied", ..., "76": "skipped", "80": "skipped" }
 ```
 
@@ -1221,7 +1221,7 @@ status 里同时给两个字段，语义不同别混用：
 
 ```bash
 # package.json
-"version": "2.3.19-dsh022"
+"version": "<ver>-dsh022"
 ```
 
 **版本号规则**：`<主>.<次>.<修订>-dsh<宿主次版本>`
@@ -1256,7 +1256,7 @@ tar -tzf out.tar.gz | grep -c '^lib/patches/'    # 必须是 5（目录 + 4 个 
 **路线 A：`dsh plugin add`（本机，能用）**
 
 ```bash
-dsh plugin --profile desktop add file:C:/Users/me/.dsh/packages/dsh-purge-nolimit-2.3.32-dsh022.tar.gz
+dsh plugin --profile desktop add file:C:/Users/me/.dsh/packages/dsh-purge-nolimit-<ver>-dsh022.tar.gz
 ```
 
 自动更新 `package.json` + 三份 lockfile + `node_modules`。
