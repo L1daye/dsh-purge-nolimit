@@ -123,7 +123,11 @@ test("锚点：每条补丁在自己的真实文件里都能对上（或已应�
         else {
           drift.push(
             `#${String(p.id).padStart(3)} ${p.name} r[${ri}] @ ${key}\n` +
-            `        pattern: ${JSON.stringify(r.pattern.slice(0, 110))}`
+            // pattern 可能是 RegExp（#40/#92 就是），直接 .slice 会 TypeError，
+            // 把真正的漂移信息吞掉——这条报错分支自己崩过。
+            `        pattern: ${JSON.stringify(
+              typeof r.pattern === "string" ? r.pattern.slice(0, 110) : String(r.pattern).slice(0, 110)
+            )}`
           );
         }
       }

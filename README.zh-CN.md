@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 网络安全红队工具（dsh-purge-nolimit）</h1>
 
-<p align="center"><strong>Version 2.3.42-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.43-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 无限制破甲：无靶场限制、无外挂拦截、无授权弹窗。Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -48,7 +48,7 @@
 
 ## dsh-purge-nolimit 插件说明
 
-本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.42），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
+本仓库是 **dsh-purge 无限制破甲版 dsh-purge-nolimit**（2.3.43），在原版 dsh-purge 1.1.82 基础上移除了所有会话门禁与授权弹窗，并持续迭代实用功能：
 
 - 公网 / 私网 / 域名目标全部放行，不再做 IP 范围拦截。
 - 游戏外挂、内存修改、注入、反作弊请求全部放行。
@@ -86,6 +86,7 @@
 | **2.3.40** | 仓库以 rc.1 为准；兼容性数字校正为实测值；`live.versionMatch` 抓「装了没重启」 |
 | **2.3.41** | `tarball`/`zip` 地址改为版本固定（原来跟着分支走）；发版清单扩到七步 |
 | **2.3.42** | 打包清单与文件系统对齐：补回 5 个漏项、排除裸提示词 `.md`，tarball 与 `npm pack` 产出同一份 163 个文件；`--status --json` 输出结构化状态 |
+| **2.3.43** | 宿主自动发现不再把临时目录里的夹具当成宿主；锚点测试改为跑真宿主 |
 
 ### 2.2.x 与更早
 
@@ -195,10 +196,10 @@ rc.1 比 rc.3 多打 5 条：四条 hooks 补丁因为 rc.1 仍随包发 `dsh-ho
 能装的方式只有一个：下载 tarball，然后跑安装脚本。
 
 从 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) 下载
-`dsh-purge-nolimit-2.3.42-dsh022.tar.gz`，和脚本放在同一个目录，然后：
+`dsh-purge-nolimit-2.3.43-dsh022.tar.gz`，和脚本放在同一个目录，然后：
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.42-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.43-dsh022.tar.gz
 ```
 
 脚本会走完这些步骤：备份现有配置和插件目录，停宿主，算 tarball 的 SHA512，解压到 `node_modules\dsh-purge`，改 profile 的 `package.json`，改写三份 lockfile，检查 `cordis.patch.yml`，最后把宿主拉起来。
@@ -224,7 +225,7 @@ $port = <宿主端口>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-rc.1 上看到 `plugin=2.3.42-dsh022` 和 `patches=74/74` 就对了（rc.3 上是 71/71）。
+rc.1 上看到 `plugin=2.3.43-dsh022` 和 `patches=74/74` 就对了（rc.3 上是 71/71）。
 
 更稳的做法是跑随包自带的自检，它还能挡住面板看不出来的那几类失败：
 
@@ -248,13 +249,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.42-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.43-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 然后改 `$prof\package.json`，加两处。`dependencies` 里加一行：
 
 ```json
-"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.42-dsh022.tar.gz"
+"dsh-purge": "file:C:/绝对路径/dsh-purge-nolimit-2.3.43-dsh022.tar.gz"
 ```
 
 `dsh.profile.bundles` 数组末尾追加 `"dsh-purge"`。

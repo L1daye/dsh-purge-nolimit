@@ -1215,16 +1215,45 @@ status 里同时给两个字段，语义不同别混用：
 
 ---
 
+### 陷阱 26：宿主自动发现会走进 `%TEMP%`，把测试夹具当宿主
+
+**症状**：在仓库目录跑 `node --test`，`patch-anchors` 报一堆「锚点漂移」；
+或者从任意工作目录跑 `--apply`，它"成功"了，但真宿主一条没变。
+
+**原因**：`findAiBaseWeb()` 的兜底扫描根是
+
+```js
+[findDshHome(), path.join(findDshHome(), ".."), os.homedir()]
+```
+
+Windows 上 `%TEMP%` = `%USERPROFILE%\AppData\Local\Temp`，从 `os.homedir()`
+起深度上限 6 恰好够走到 `Temp\<fixture>\patch-host\node_modules\@deepseek-ai`。
+而 `isAiBase()` 只查 `dsh-agent-instructions/lib` 是不是目录——夹具和真实安装
+长得一模一样。
+
+**实测**：`patch-anchors` 拿到夹具后，115 条本该「已应用」的只认出 7 条，
+132 条判成「不适用」。它一直**靠运气通过**：临时目录里恰好还没有夹具时才是绿的。
+
+**修法**（2.3.43）：加 `isTempDirPath()`，三处生效——`findAiBaseRecursive()` 入口
+不下钻、`findAiBase()` 丢弃、`enumeratePatchAiBases()` 的 `add()` 单独挡
+（那个函数绕过 `findAiBase()`）。显式传入的路径不受影响。
+
+**教训**：**「结构对得上」不等于「这就是宿主」。** 自动发现类逻辑必须排除
+临时目录、缓存目录、测试目录——它们天然会包含结构正确的残骸。
+测试夹具尤其危险：它就是为了长得像而造的。
+
+---
+
 ## 5. 发布流程
 
 ### 5.1 改版本号（三处一起改，别只改 version）
 
 ```json
-"version": "2.3.42-dsh022",
+"version": "2.3.43-dsh022",
 "dsh": {
   "install": {
-    "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.42-dsh022/dsh-purge-nolimit-2.3.42-dsh022.tar.gz",
-    "zip":     "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.42-dsh022.zip"
+    "tarball": "https://github.com/L1daye/dsh-purge-nolimit/releases/download/v2.3.43-dsh022/dsh-purge-nolimit-2.3.43-dsh022.tar.gz",
+    "zip":     "https://github.com/L1daye/dsh-purge-nolimit/archive/refs/tags/v2.3.43-dsh022.zip"
   }
 }
 ```
@@ -1236,7 +1265,7 @@ status 里同时给两个字段，语义不同别混用：
 **为什么 `dsh.install` 必须一起改**：`lib/profile-insert.js` 的 `readPkgTarball()`
 读的就是这个字段，会把它写进 profile 的安装 specifier。指向
 `codeload.github.com/.../refs/heads/main` 意味着每次安装拉的是**当时的分支源码**，
-不是发出去、测过的那份包——版本号写着 2.3.42，装出来的内容随 main 漂移。
+不是发出去、测过的那份包——版本号写着 2.3.43，装出来的内容随 main 漂移。
 所以两处必须是**版本化的 release 资产 URL**。
 
 发版顺序（顺序错了会指向还不存在的资产，但 GitHub 允许先建 release 不留资产，所以：

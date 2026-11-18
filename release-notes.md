@@ -1,3 +1,124 @@
+# 2.3.43
+
+## 中文
+
+### 缺陷
+
+宿主自动发现会把**临时目录里的测试夹具当成宿主**返回。
+
+兜底递归扫描的根包含 `os.homedir()`。Windows 上 `%TEMP%` 位于
+`%USERPROFILE%\AppData\Local\Temp`，深度上限 6 恰好够走到
+
+```
+Temp\<fixture>\patch-host\node_modules\@deepseek-ai
+```
+
+而 `isAiBase()` 的判据只是 `dsh-agent-instructions/lib` 是不是目录，测试留下的夹具
+与真实安装结构完全相同。
+
+实测后果一：在仓库目录跑 `node --test`，`patch-anchors` 拿到的是临时夹具——
+115 条应「已应用」的补丁里有 108 条被判成「不适用」，另有两条被报成锚点漂移。
+它对着一个假宿主下结论，且**这一轮之前是恰好通过**。
+
+实测后果二（更严重）：`--apply` 从任意工作目录调用时，可能去改一个临时夹具，
+然后报告成功。
+
+### 变更
+
+新增 `isTempDirPath()`，三处生效：
+
+| 位置 | 作用 |
+| --- | --- |
+| `findAiBaseRecursive()` 入口 | 不下钻临时目录，顺带省掉整棵 `%TEMP%` 的 readdir |
+| `findAiBase()` 的返回 | 自动发现结果落在临时目录时丢弃 |
+| `enumeratePatchAiBases()` 的 `add()` | 该函数绕过 `findAiBase()` 直接调底层，需单独挡 |
+
+显式传入的路径不受影响：`targetFiles()`、`DSH_BASE`、测试夹具照常工作。
+
+### 影响范围
+
+补丁表、提示词槽、语义分层与运行时行为未改动。DSH 0.2.2-rc.1 上的补丁状态不变：
+applied 86 / skipped 2 / na 0，面板 74/74，破甲审计 11/11。
+
+正常桌面安装不受影响：`findAiBaseDesktop()` 走 `resolveDesktopAiBase()`，
+不经过递归扫描。
+
+### 测试
+
+新增 `test/aibase-temp-guard.test.mjs`（4 项）：先断言夹具确实长得像真宿主
+（否则测试无效），再断言 `findAiBase()` 与 `enumeratePatchAiBases()` 都不返回它，
+最后断言显式传入夹具路径时 `targetFiles()` 仍然工作。
+
+`patch-anchors` 的报错分支同时修了一处：`r.pattern.slice(0, 110)` 对 RegExp 会抛
+`TypeError`，把真正的漂移信息吞掉——这条消息路径自己崩过。现在按类型取字符串。
+
+测试 201 项全部通过（197 + 4）。修正后 `patch-anchors` 跑的是真宿主：
+锚点 5 · 已应用 115 · 软/可选合流 13 · 不适用 85 · 漂移 0。
+
+## English
+
+### Defect
+
+Host auto-discovery could return a **test fixture inside the temp directory** as the host.
+
+The fallback recursive scan includes `os.homedir()` among its roots. On Windows
+`%TEMP%` lives under `%USERPROFILE%\AppData\Local\Temp`, and the depth limit of 6
+is exactly enough to reach
+
+```
+Temp\<fixture>\patch-host\node_modules\@deepseek-ai
+```
+
+while `isAiBase()` only checks that `dsh-agent-instructions/lib` is a directory —
+which a test fixture satisfies just as well as a real installation.
+
+Observed consequence 1: running `node --test` from the repository made
+`patch-anchors` read the fixture. 108 of the 115 entries that should read as
+"already applied" were classified "not applicable", and two patches were reported as
+anchor drift. It was drawing conclusions about a fake host, and had been **passing
+by luck** until now.
+
+Observed consequence 2, worse: `--apply` invoked from an arbitrary working directory
+could patch a temp fixture and report success.
+
+### Change
+
+New `isTempDirPath()`, applied in three places:
+
+| Location | Effect |
+| --- | --- |
+| entry of `findAiBaseRecursive()` | do not descend into temp; also avoids reading all of `%TEMP%` |
+| return of `findAiBase()` | discard a discovered result that lands in temp |
+| `add()` in `enumeratePatchAiBases()` | that function bypasses `findAiBase()` and needs its own guard |
+
+Explicitly supplied paths are unaffected: `targetFiles()`, `DSH_BASE` and test
+fixtures still work.
+
+### Scope
+
+The patch table, prompt slot, semantic layers and runtime behaviour are unchanged.
+Patch state on DSH 0.2.2-rc.1 is unchanged: applied 86 / skipped 2 / na 0, panel
+74/74, armour audit 11/11.
+
+A normal desktop installation is unaffected: `findAiBaseDesktop()` resolves through
+`resolveDesktopAiBase()` and never takes the recursive scan.
+
+### Tests
+
+New `test/aibase-temp-guard.test.mjs` (4 cases): first asserts the fixture really
+does look like a host, so the test is meaningful; then that neither `findAiBase()`
+nor `enumeratePatchAiBases()` returns it; finally that an explicitly supplied
+fixture path still works with `targetFiles()`.
+
+The `patch-anchors` failure path was also fixed: `r.pattern.slice(0, 110)` throws
+`TypeError` for RegExp patterns, which swallowed the real drift report — the
+message path itself had been crashing. It now stringifies by type.
+
+All 201 tests pass (197 + 4). `patch-anchors` now runs against the real host:
+anchors 5 · applied 115 · soft/optional 13 · not applicable 85 · drift 0.
+
+---
+
 # 2.3.42
 
 ## 中文

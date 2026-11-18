@@ -7,7 +7,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge-nolimit）</h1>
 
-<p align="center"><strong>Version 2.3.42-dsh022</strong></p>
+<p align="center"><strong>Version 2.3.43-dsh022</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness 無制限解除：レンジ制限なし、チート遮断なし、承認ダイアログなし。Jailbreak for every model — dsh-purge-nolimit.</em>
@@ -48,7 +48,7 @@
 
 ## dsh-purge-nolimit について
 
-本リポジトリは **dsh-purge の無制限版 dsh-purge-nolimit**（2.3.42）です。原版 dsh-purge 1.1.82 を基に、すべてのセッションゲートと承認ダイアログを撤廃し、実用機能を継続的に追加しています：
+本リポジトリは **dsh-purge の無制限版 dsh-purge-nolimit**（2.3.43）です。原版 dsh-purge 1.1.82 を基に、すべてのセッションゲートと承認ダイアログを撤廃し、実用機能を継続的に追加しています：
 
 - 公開 / プライベート / ドメインのターゲットをすべて許可。IP レンジ判定を行いません。
 - ゲームチート、メモリ改変、インジェクション、アンチチート回避をすべて許可。
@@ -86,6 +86,7 @@
 | **2.3.40** | リポジトリは rc.1 を主対象に。互換性の数値を実測値へ。`live.versionMatch` が「導入したが未再起動」を捕捉 |
 | **2.3.41** | `tarball`/`zip` の URL をバージョン固定に（従来はブランチ追従）。リリース手順を七段階へ |
 | **2.3.42** | パッケージ内容をファイルシステムと一致（不足 5 件を追加、素のプロンプト `.md` を除外）。tarball と `npm pack` が同一の 163 ファイルを生成。`--status --json` が構造化状態を出力 |
+| **2.3.43** | ホスト自動検出が一時ディレクトリのフィクスチャをホストと誤認しないように。アンカーテストは実ホストで実行 |
 
 ### 2.2.x 以前
 
@@ -202,11 +203,11 @@ DSH のデスクトップ版ではどのプラグインでも同じです。プ�
 実行してください。
 
 [Releases](https://github.com/L1daye/dsh-purge-nolimit/releases) から
-`dsh-purge-nolimit-2.3.42-dsh022.tar.gz` を取得し、スクリプトと同じディレクトリに
+`dsh-purge-nolimit-2.3.43-dsh022.tar.gz` を取得し、スクリプトと同じディレクトリに
 置いて実行します：
 
 ```powershell
-.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.42-dsh022.tar.gz
+.\scripts\install-standalone.ps1 -Tarball .\dsh-purge-nolimit-2.3.43-dsh022.tar.gz
 ```
 
 スクリプトは次の順に処理します：既存の設定とプラグインディレクトリをバックアップ、
@@ -240,7 +241,7 @@ $port = <ホストのポート>
 (Invoke-WebRequest "http://127.0.0.1:$port/dsh-purge/status" -UseBasicParsing).Content
 ```
 
-rc.1 では `plugin=2.3.42-dsh022` と `patches=74/74` が出ていれば正常です（rc.3 では 71/71）。
+rc.1 では `plugin=2.3.43-dsh022` と `patches=74/74` が出ていれば正常です（rc.3 では 71/71）。
 
 より確実なのは同梱のセルフチェックです。パネルからは見えない失敗も捕捉します。
 
@@ -267,13 +268,13 @@ $home = "$env:USERPROFILE\.dsh"
 $prof = "$home\profiles\desktop"
 Remove-Item "$prof\node_modules\dsh-purge" -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory "$prof\node_modules\dsh-purge" -Force | Out-Null
-tar -xzf .\dsh-purge-nolimit-2.3.42-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
+tar -xzf .\dsh-purge-nolimit-2.3.43-dsh022.tar.gz -C "$prof\node_modules\dsh-purge"
 ```
 
 次に `$prof\package.json` を 2 か所修正します。`dependencies` に追加：
 
 ```json
-"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.42-dsh022.tar.gz"
+"dsh-purge": "file:C:/absolute/path/dsh-purge-nolimit-2.3.43-dsh022.tar.gz"
 ```
 
 `dsh.profile.bundles` の配列末尾に `"dsh-purge"` を追加します。
