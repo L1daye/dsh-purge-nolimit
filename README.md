@@ -83,8 +83,8 @@ This is **dsh-purge-nolimit**, the unrestricted build of dsh-purge (2.3.41). It 
 | **2.3.37** | One build serves rc.1 / rc.2 / rc.3 (`dshTargets`) |
 | **2.3.38** | Three real bugs found by the full-surface probe: script entry points that ran on `import`, three layers that could never reach `ok`, unreadable `node:sqlite` error |
 | **2.3.39** | `--diagnose --json` emits pure JSON |
-| **2.3.41** | Version-pinned `tarball`/`zip` URLs (they used to follow the branch); seven-step release checklist |
 | **2.3.40** | Repo leads with rc.1; measured compatibility numbers; `live.versionMatch` catches a stale running version |
+| **2.3.41** | Version-pinned `tarball`/`zip` URLs (they used to follow the branch); seven-step release checklist |
 
 ### 2.2.x and earlier
 
