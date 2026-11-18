@@ -1,31 +1,123 @@
 # 2.3.41
 
-> 修一个发出去的元数据缺陷：`package.json` 里 `dsh.install.tarball` 指向
-> `codeload.github.com/.../refs/heads/main`，也就是**移动的分支源码**。
-> `lib/profile-insert.js` 的 `readPkgTarball()` 会把它写成 profile 的安装 specifier——
-> 版本号写着 2.3.40，装出来的内容却随 main 漂移。
-
 ## 中文
 
-- `dsh.install.tarball` → 版本化的 release 资产：
-  `.../releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz`
-- `dsh.install.zip` → tag 归档：`.../archive/refs/tags/v2.3.41-dsh022.zip`
-  （原来是 `refs/heads/main`，同样是移动的）
-- AGENTS.md §5.1 从「改版本号」升级成七步发版清单，写清了 `dsh.install`
-  为什么必须跟着版本一起改、以及发版顺序。
+### 缺陷
 
-补丁与提示词语义零改动，行为与 2.3.40 完全一致。
+`package.json` 的 `dsh.install.tarball` 与 `dsh.install.zip` 指向
+`codeload.github.com/.../refs/heads/main`，是可变的分支引用。
+
+`lib/profile-insert.js` 的 `readPkgTarball()` 读取该字段并写入 profile 的安装
+specifier。版本号因此不约束实际安装内容，解析结果取决于取包时刻 `main` 指向的提交。
+
+### 变更
+
+两个字段改为按版本固定的地址。
+
+| 字段 | 2.3.40 | 2.3.41 |
+| --- | --- | --- |
+| `tarball` | `codeload…/refs/heads/main` | `releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz` |
+| `zip` | `codeload…/refs/heads/main` | `archive/refs/tags/v2.3.41-dsh022.zip` |
+
+### 影响范围
+
+补丁表（88 条）、提示词槽（20172 字符）、语义分层（38 层）与运行时行为均未改动。
+DSH 0.2.2-rc.1 上 2.3.41 的补丁状态与 2.3.40 相同：
+
+```
+applied 86 / skipped 2 / na 0     面板 74/74
+语义分层 38 层 ok                  破甲审计 11/11
+```
+
+变更只作用于经由 package 元数据字段解析安装来源的路径。
+
+### 测试
+
+`test/profile-insert.test.js` 原先把期望 URL 写成字面量，与代码兜底值恰好相同，
+两条分支因此无法区分：读 lock，与退回 `package.json`，产出同一字符串。
+
+现在期望值从 `package.json` 读取；另设 `LEGACY_URL` 常量，仅用于模拟 lock 中残留
+旧地址的用例。该场景下代码保留 lock 原值，因为 pnpm 的 builds 键必须与 lock 一致，
+替换会让同一个包出现两个键。
+
+测试 197 项全部通过。
+
+### 文档
+
+`AGENTS.md` §5.1 由「改版本号」扩充为完整发版流程，说明 `dsh.install` 为什么必须
+随版本一同修改，以及各步骤的顺序。
+
+### 制品
+
+- `dsh-purge-nolimit-2.3.41-dsh022.tar.gz` — sha256 `8b29d8bb43b956ad085b12963a0c574d9228cf2351b67086cea1957364688433`
+- `redteam-tools-20.tar.gz` — 与 2.3.40 相同，未重新打包
+
+2.3.40 的 tarball 内 `package.json` 仍含上述可变地址。经由该包安装的环境，其 profile
+specifier 会继续解析到 `main`；建议改用 2.3.41。
 
 ## English
 
-- `dsh.install.tarball` now points at the versioned release asset instead of the
-  moving `refs/heads/main` source archive; `readPkgTarball()` in
-  `lib/profile-insert.js` writes that value into the profile's install specifier,
-  so a moving URL meant "version says 2.3.40, content follows main".
-- `dsh.install.zip` now points at the tag archive for the same reason.
-- AGENTS.md §5.1 became a seven-step release checklist.
+### Defect
 
-No patch or prompt semantics changed; behaviour is identical to 2.3.40.
+`package.json` declared `dsh.install.tarball` and `dsh.install.zip` as
+`codeload.github.com/.../refs/heads/main`, a mutable branch reference.
+
+`readPkgTarball()` in `lib/profile-insert.js` reads that field and writes it into
+the profile's install specifier. The declared version therefore did not constrain
+the installed content: resolution depended on whatever `main` pointed at when the
+package was fetched.
+
+### Change
+
+Both fields now resolve to version-addressed locations.
+
+| Field | 2.3.40 | 2.3.41 |
+| --- | --- | --- |
+| `tarball` | `codeload…/refs/heads/main` | `releases/download/v2.3.41-dsh022/dsh-purge-nolimit-2.3.41-dsh022.tar.gz` |
+| `zip` | `codeload…/refs/heads/main` | `archive/refs/tags/v2.3.41-dsh022.zip` |
+
+### Scope
+
+The patch table (88 entries), the prompt slot (20172 characters), the semantic
+layers (38) and runtime behaviour are unchanged. On DSH 0.2.2-rc.1 the patch state
+of 2.3.41 matches 2.3.40:
+
+```
+applied 86 / skipped 2 / na 0     panel 74/74
+semantic layers 38 ok             armour audit 11/11
+```
+
+The change affects only installs whose source is resolved through the package
+metadata field.
+
+### Tests
+
+`test/profile-insert.test.js` previously hardcoded the expected URL as a literal
+that happened to equal the code's fallback, so the two branches — read the lock,
+or fall back to `package.json` — produced the same string and were
+indistinguishable.
+
+The expectation now derives from `package.json`, and a separate `LEGACY_URL`
+constant covers the fixture simulating a stale lock entry. In that case the code
+preserves the lock value, because the pnpm builds key has to match the lock;
+substituting it would produce two keys for one package.
+
+All 197 tests pass.
+
+### Documentation
+
+`AGENTS.md` §5.1 was expanded from "bump the version" into the full release
+procedure, covering why `dsh.install` must move with the version and the order of
+the steps.
+
+### Artifacts
+
+- `dsh-purge-nolimit-2.3.41-dsh022.tar.gz` — sha256 `8b29d8bb43b956ad085b12963a0c574d9228cf2351b67086cea1957364688433`
+- `redteam-tools-20.tar.gz` — unchanged from 2.3.40
+
+The `package.json` inside the 2.3.40 tarball still carries the mutable URLs.
+Environments installed through that package keep resolving to `main`; moving to
+2.3.41 is advised.
 
 ---
 
